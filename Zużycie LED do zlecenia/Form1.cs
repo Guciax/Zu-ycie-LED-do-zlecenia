@@ -20,63 +20,79 @@ namespace Zużycie_LED_do_zlecenia
 
         private DataTable CheckLot(string orderNo)
         {
-            DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
-            Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = FullLedInfo(sqlLedsForOrder);
+            var kittingData = MST.MES.SqlDataReaderMethods.Kitting.GetOneOrderByDataReader(orderNo);
             DataTable result = new DataTable();
-            result.Columns.Add("LED_12NC");
-            result.Columns.Add("ID");
-            result.Columns.Add("Partia");
-            result.Columns.Add("Ilosc zużyta");
-            result.Columns.Add("Ilosc aktualna");
-
-            foreach (var nc12Entry in detailedLedInfo)
+            if (kittingData.orderNo != null)
             {
-                foreach (var idEntry in nc12Entry.Value)
+                if (kittingData.endDate < DateTime.Now.AddYears(-50))
                 {
-                    double startQty = 0;
-                    double totalQty = 0;
-                    string partia = "";
-                    double currentQty = 0;
-                    for (int r = 0; r < idEntry.Value.Rows.Count; r++) 
+                    labelStatus.Text = $"Status: zlecenie nie jest zakończone!";
+                    buttonEndOrder.Visible = true;
+                }
+                else
+                {
+                    labelStatus.Text = $"Status: zlecenie zakończone: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}";
+                    buttonEndOrder.Visible = false;
+                }
+
+
+                DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
+                Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = FullLedInfo(sqlLedsForOrder);
+                
+                result.Columns.Add("LED_12NC");
+                result.Columns.Add("ID");
+                result.Columns.Add("Partia");
+                result.Columns.Add("Ilosc zużyta");
+                result.Columns.Add("Ilosc aktualna");
+
+                foreach (var nc12Entry in detailedLedInfo)
+                {
+                    foreach (var idEntry in nc12Entry.Value)
                     {
-                        partia = idEntry.Value.Rows[r]["Partia"].ToString();
-                        if (idEntry.Value.Rows[r]["ZlecenieString"].ToString() != orderNo) continue;
-                        startQty = double.Parse(idEntry.Value.Rows[r]["qty"].ToString());
-
-                        if (r < idEntry.Value.Rows.Count - 1) 
+                        double startQty = 0;
+                        double totalQty = 0;
+                        string partia = "";
+                        double currentQty = 0;
+                        for (int r = 0; r < idEntry.Value.Rows.Count; r++)
                         {
-                            for (int rr = r + 1; rr < idEntry.Value.Rows.Count; rr++) 
-                            {
-                                double endQty = double.Parse(idEntry.Value.Rows[rr - 1]["qty"].ToString());
-                                if (idEntry.Value.Rows[rr]["ZlecenieString"].ToString() != orderNo || endQty==0) 
-                                {
-                                    totalQty += startQty - endQty;
-                                    currentQty = endQty;
-                                    r = rr;
-                                    break;
-                                }
+                            partia = idEntry.Value.Rows[r]["Partia"].ToString();
+                            if (idEntry.Value.Rows[r]["ZlecenieString"].ToString() != orderNo) continue;
+                            startQty = double.Parse(idEntry.Value.Rows[r]["qty"].ToString());
 
-                                if (rr == idEntry.Value.Rows.Count - 1)
+                            if (r < idEntry.Value.Rows.Count - 1)
+                            {
+                                for (int rr = r + 1; rr < idEntry.Value.Rows.Count; rr++)
                                 {
-                                    endQty = double.Parse(idEntry.Value.Rows[rr]["qty"].ToString());
-                                    totalQty += startQty - endQty;
-                                    currentQty = endQty;
-                                    r = rr;
-                                    break;
+                                    double endQty = double.Parse(idEntry.Value.Rows[rr - 1]["qty"].ToString());
+                                    if (idEntry.Value.Rows[rr]["ZlecenieString"].ToString() != orderNo || endQty == 0)
+                                    {
+                                        totalQty += startQty - endQty;
+                                        currentQty = endQty;
+                                        r = rr;
+                                        break;
+                                    }
+
+                                    if (rr == idEntry.Value.Rows.Count - 1)
+                                    {
+                                        endQty = double.Parse(idEntry.Value.Rows[rr]["qty"].ToString());
+                                        totalQty += startQty - endQty;
+                                        currentQty = endQty;
+                                        r = rr;
+                                        break;
+                                    }
                                 }
                             }
+                            else
+                            {
+                                double endQty = double.Parse(idEntry.Value.Rows[r]["qty"].ToString());
+                                totalQty += startQty - endQty;
+                                currentQty = endQty;
+                            }
                         }
-                        else
-                        {
-                            double endQty = double.Parse(idEntry.Value.Rows[r]["qty"].ToString());
-                            totalQty += startQty - endQty;
-                            currentQty = endQty;
-                        }
+                        result.Rows.Add(nc12Entry.Key, idEntry.Key, partia, totalQty, currentQty);
                     }
-                    result.Rows.Add(nc12Entry.Key, idEntry.Key, partia, totalQty, currentQty);
                 }
             }
-
             return result;
         }
 
@@ -132,6 +148,16 @@ namespace Zużycie_LED_do_zlecenia
                 {
                     column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 }
+            }
+        }
+
+        private void buttonEndOrder_Click(object sender, EventArgs e)
+        {
+            DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie." + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
+            if (dialogResult == DialogResult.Yes)
+            {
+                MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
+                //zapisz końcówki!!!!!!!!!!!
             }
         }
     }
