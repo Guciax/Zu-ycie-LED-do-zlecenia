@@ -41,21 +41,25 @@ namespace Zużycie_LED_do_zlecenia
             }
 
             DataTable detailedLedTable = MST.MES.SqlOperations.SparingLedInfo.GetInfoForMultiple12NC_ID(ledsInLot.ToArray());
+            DataTable templateTable = new DataTable();
+            templateTable.Columns.Add("nc12");
+            templateTable.Columns.Add("id");
+            templateTable.Columns.Add("Partia");
+            templateTable.Columns.Add("qty");
+            templateTable.Columns.Add("zuzycie");
+            templateTable.Columns.Add("zlecenieString");
+            templateTable.Columns.Add("Data_Czas");
 
             foreach (DataRow row in detailedLedTable.Rows)
             {
-                DataTable templateTable = new DataTable();
-                templateTable.Columns.Add("nc12");
-                templateTable.Columns.Add("id");
-                templateTable.Columns.Add("Partia");
-                templateTable.Columns.Add("qty");
-                templateTable.Columns.Add("zlecenieString");
-
+                string zlecenieString = row["zlecenieString"].ToString();
+                if (zlecenieString == "") continue;
                 
                 string nc12 = row["NC12"].ToString();
                 string id = row["ID"].ToString();
                 string partia = row["Partia"].ToString();
-                string zlecenieString = row["zlecenieString"].ToString();
+                int zuzycie = 0;
+
                 string qty = row["Ilosc"].ToString();
 
                 if (!result.ContainsKey(nc12)) {
@@ -64,7 +68,16 @@ namespace Zużycie_LED_do_zlecenia
                 if (!result[nc12].ContainsKey(id)) {
                     result[nc12].Add(id, templateTable.Clone()); }
 
-                result[nc12][id].Rows.Add(nc12, id,partia, qty, zlecenieString);
+                if (result[nc12][id].Rows.Count > 0)
+                {
+                    if (result[nc12][id].Rows[result[nc12][id].Rows.Count-1]["zlecenieString"].ToString() == zlecenieString)
+                    {
+                        int lastQty = int.Parse(result[nc12][id].Rows[result[nc12][id].Rows.Count - 1]["qty"].ToString());
+                        zuzycie = lastQty - int.Parse(qty);
+                    }
+                }
+
+                result[nc12][id].Rows.Add(nc12, id,partia, qty, zuzycie, zlecenieString, row["Data_Czas"].ToString());
             }
             return result;
         }
@@ -76,12 +89,14 @@ namespace Zużycie_LED_do_zlecenia
             {
                 pictureBox1.Visible = true;
                 backgroundWorker1.RunWorkerAsync();
-                
+                ledsUsed = 0;   
             }
         }
-        
+
+        Dictionary<string, DataTable> detailedLedInfoDict = new Dictionary<string, DataTable>();
         private void BackgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
+            detailedLedInfoDict = new Dictionary<string, DataTable>();
             string orderNo = textBoxOrderNo.Text;
             kittingData = MST.MES.SqlDataReaderMethods.Kitting.GetOneOrderByDataReader(orderNo);
             smtData = MST.MES.SqlDataReaderMethods.SMT.GetOneOrder(orderNo);
@@ -101,51 +116,23 @@ namespace Zużycie_LED_do_zlecenia
                 result.Columns.Add("Ilosc zużyta");
                 result.Columns.Add("Ilosc aktualna");
 
-
                 foreach (var nc12Entry in detailedLedInfo)
                 {
                     foreach (var idEntry in nc12Entry.Value)
                     {
-                        double startQty = 0;
                         double totalQty = 0;
-                        string partia = "";
-                        double currentQty = 0;
-                        for (int r = 0; r < idEntry.Value.Rows.Count; r++)
+                        string partia = idEntry.Value.Rows[0]["Partia"].ToString();
+                        detailedLedInfoDict.Add(nc12Entry.Key + idEntry.Key, idEntry.Value);
+                        foreach (DataRow row in idEntry.Value.Rows)
                         {
-                            partia = idEntry.Value.Rows[r]["Partia"].ToString();
-                            if (idEntry.Value.Rows[r]["ZlecenieString"].ToString() != orderNo) continue;
-                            startQty = double.Parse(idEntry.Value.Rows[r]["qty"].ToString());
+                            string zlecenieString = row["ZlecenieString"].ToString();
+                            if (zlecenieString != kittingData.orderNo) continue;
 
-                            if (r < idEntry.Value.Rows.Count - 1)
-                            {
-                                for (int rr = r + 1; rr < idEntry.Value.Rows.Count; rr++)
-                                {
-                                    double endQty = double.Parse(idEntry.Value.Rows[rr - 1]["qty"].ToString());
-                                    if (idEntry.Value.Rows[rr]["ZlecenieString"].ToString() != orderNo || endQty == 0)
-                                    {
-                                        totalQty += startQty - endQty;
-                                        currentQty = endQty;
-                                        r = rr;
-                                        break;
-                                    }
-
-                                    if (rr == idEntry.Value.Rows.Count - 1)
-                                    {
-                                        endQty = double.Parse(idEntry.Value.Rows[rr]["qty"].ToString());
-                                        totalQty += startQty - endQty;
-                                        currentQty = endQty;
-                                        r = rr;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                double endQty = double.Parse(idEntry.Value.Rows[r]["qty"].ToString());
-                                totalQty += startQty - endQty;
-                                currentQty = endQty;
-                            }
+                            int usedLed = int.Parse(row["zuzycie"].ToString());
+                            totalQty += usedLed;
                         }
+                        int currentQty = int.Parse(idEntry.Value.Rows[idEntry.Value.Rows.Count - 1]["qty"].ToString());
+
                         ledsUsed += totalQty;
                         result.Rows.Add(nc12Entry.Key, idEntry.Key, partia, totalQty, currentQty);
                     }
@@ -176,12 +163,19 @@ namespace Zużycie_LED_do_zlecenia
             pictureBox1.Location = new Point(textBoxOrderNo.Location.X + 2, textBoxOrderNo.Location.Y + 2);
             pictureBox1.Visible = false;
 
+            DataGridViewButtonColumn butCol = new DataGridViewButtonColumn();
+            butCol.HeaderText = "Edytuj Ilość";
+            butCol.Name = "butCol";
+            dataGridView1.Columns.Add(butCol);
+
         }
 
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             dataGridView1.DataSource = sourceTable;
+            dataGridView1.Columns["butCol"].DisplayIndex = dataGridView1.Columns.Count - 1;
+
             foreach (DataGridViewColumn column in dataGridView1.Columns)
             {
                 column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
@@ -217,13 +211,48 @@ namespace Zużycie_LED_do_zlecenia
             pictureBox1.Visible = false;
 
             labelProductionInfo.Text = $"Ilość po SMT: {smtData.totalManufacturedQty}" + Environment.NewLine;
-                
-
         }
 
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void dataGridView1_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex>-1 && e.ColumnIndex>-1)
+            {
+
+                string ncId = dataGridView1.Rows[e.RowIndex].Cells["LED_12NC"].Value.ToString() + dataGridView1.Rows[e.RowIndex].Cells["ID"].Value.ToString();
+                if (detailedLedInfoDict.ContainsKey(ncId))
+                {
+                    Details detForm = new Details(detailedLedInfoDict[ncId]);
+                    detForm.Show();
+                }
+            }
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex>-1 & e.ColumnIndex > -1)
+            {
+                if (dataGridView1.Columns[e.ColumnIndex].Name== "butCol")
+                {
+                    string nc12 = dataGridView1.Rows[e.RowIndex].Cells["LED_12NC"].Value.ToString();
+                    string id = dataGridView1.Rows[e.RowIndex].Cells["ID"].Value.ToString();
+
+                    using (EditLedQty editForm = new EditLedQty(nc12, id, kittingData.orderNo))
+                    {
+                        if (editForm.ShowDialog() == DialogResult.OK)
+                        {
+                            pictureBox1.Visible = true;
+                            textBoxOrderNo.Text = kittingData.orderNo;
+                            backgroundWorker1.RunWorkerAsync();
+                            ledsUsed = 0;
+                        }
+                    }
+                }
+            }
         }
     }
 }
