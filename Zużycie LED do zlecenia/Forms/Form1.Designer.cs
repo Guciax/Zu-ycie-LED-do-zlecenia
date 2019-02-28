@@ -34,27 +34,28 @@
             this.buttonEndOrder = new System.Windows.Forms.Button();
             this.labelStatus = new System.Windows.Forms.Label();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.panel2 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel6 = new System.Windows.Forms.Panel();
             this.labelProductionInfo = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.buttonChangeSmtQty = new System.Windows.Forms.Button();
             this.labelOrderInfo = new System.Windows.Forms.Label();
             this.panel5 = new System.Windows.Forms.Panel();
             this.labelRealUsage = new System.Windows.Forms.Label();
             this.labelTeorUsage = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
             this.labelModelInfo = new System.Windows.Forms.Label();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel2.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel6.SuspendLayout();
             this.panel3.SuspendLayout();
             this.panel5.SuspendLayout();
             this.panel4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // textBoxOrderNo
@@ -120,16 +121,6 @@
             this.backgroundWorker1.WorkerReportsProgress = true;
             this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker1_RunWorkerCompleted);
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::Zużycie_LED_do_zlecenia.Properties.Resources.loading_bar;
-            this.pictureBox1.Location = new System.Drawing.Point(21, 3);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(408, 22);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 5;
-            this.pictureBox1.TabStop = false;
-            // 
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
@@ -166,6 +157,7 @@
             // 
             this.panel6.BackColor = System.Drawing.Color.White;
             this.panel6.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel6.Controls.Add(this.buttonChangeSmtQty);
             this.panel6.Controls.Add(this.labelProductionInfo);
             this.panel6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel6.Location = new System.Drawing.Point(1, 161);
@@ -195,6 +187,18 @@
             this.panel3.Name = "panel3";
             this.panel3.Size = new System.Drawing.Size(534, 48);
             this.panel3.TabIndex = 0;
+            // 
+            // buttonChangeSmtQty
+            // 
+            this.buttonChangeSmtQty.Dock = System.Windows.Forms.DockStyle.Right;
+            this.buttonChangeSmtQty.Enabled = false;
+            this.buttonChangeSmtQty.Location = new System.Drawing.Point(444, 0);
+            this.buttonChangeSmtQty.Name = "buttonChangeSmtQty";
+            this.buttonChangeSmtQty.Size = new System.Drawing.Size(88, 56);
+            this.buttonChangeSmtQty.TabIndex = 7;
+            this.buttonChangeSmtQty.Text = "Zmień ilość SMT";
+            this.buttonChangeSmtQty.UseVisualStyleBackColor = true;
+            this.buttonChangeSmtQty.Click += new System.EventHandler(this.buttonChangeSmtQty_Click);
             // 
             // labelOrderInfo
             // 
@@ -262,6 +266,16 @@
             this.labelModelInfo.Text = "Model:";
             this.labelModelInfo.Click += new System.EventHandler(this.label1_Click);
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::Zużycie_LED_do_zlecenia.Properties.Resources.loading_bar;
+            this.pictureBox1.Location = new System.Drawing.Point(21, 3);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(408, 22);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox1.TabIndex = 5;
+            this.pictureBox1.TabStop = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -276,7 +290,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
@@ -288,6 +301,7 @@
             this.panel5.PerformLayout();
             this.panel4.ResumeLayout(false);
             this.panel4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -312,6 +326,7 @@
         private System.Windows.Forms.Label labelRealUsage;
         private System.Windows.Forms.Panel panel6;
         private System.Windows.Forms.Label labelProductionInfo;
+        private System.Windows.Forms.Button buttonChangeSmtQty;
     }
 }
 
