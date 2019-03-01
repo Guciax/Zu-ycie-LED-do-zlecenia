@@ -37,9 +37,9 @@
             this.panel2 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.panel6 = new System.Windows.Forms.Panel();
+            this.buttonChangeSmtQty = new System.Windows.Forms.Button();
             this.labelProductionInfo = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
-            this.buttonChangeSmtQty = new System.Windows.Forms.Button();
             this.labelOrderInfo = new System.Windows.Forms.Label();
             this.panel5 = new System.Windows.Forms.Panel();
             this.labelRealUsage = new System.Windows.Forms.Label();
@@ -47,6 +47,10 @@
             this.panel4 = new System.Windows.Forms.Panel();
             this.labelModelInfo = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.panel7 = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.labelNg = new System.Windows.Forms.Label();
+            this.labelScrap = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -56,6 +60,7 @@
             this.panel5.SuspendLayout();
             this.panel4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            this.panel7.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBoxOrderNo
@@ -64,7 +69,7 @@
             this.textBoxOrderNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
             this.textBoxOrderNo.Location = new System.Drawing.Point(1, 1);
             this.textBoxOrderNo.Name = "textBoxOrderNo";
-            this.textBoxOrderNo.Size = new System.Drawing.Size(536, 30);
+            this.textBoxOrderNo.Size = new System.Drawing.Size(538, 30);
             this.textBoxOrderNo.TabIndex = 0;
             this.textBoxOrderNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxOrderNo_KeyDown);
             // 
@@ -76,11 +81,11 @@
             this.dataGridView1.AllowUserToResizeRows = false;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 302);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 370);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.Size = new System.Drawing.Size(538, 308);
+            this.dataGridView1.Size = new System.Drawing.Size(540, 240);
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             this.dataGridView1.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentDoubleClick);
@@ -92,13 +97,13 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panel1.Location = new System.Drawing.Point(0, 610);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(538, 41);
+            this.panel1.Size = new System.Drawing.Size(540, 41);
             this.panel1.TabIndex = 2;
             // 
             // buttonEndOrder
             // 
             this.buttonEndOrder.Dock = System.Windows.Forms.DockStyle.Right;
-            this.buttonEndOrder.Location = new System.Drawing.Point(447, 0);
+            this.buttonEndOrder.Location = new System.Drawing.Point(449, 0);
             this.buttonEndOrder.Name = "buttonEndOrder";
             this.buttonEndOrder.Size = new System.Drawing.Size(91, 41);
             this.buttonEndOrder.TabIndex = 1;
@@ -131,7 +136,7 @@
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
             this.panel2.Padding = new System.Windows.Forms.Padding(1);
-            this.panel2.Size = new System.Drawing.Size(538, 302);
+            this.panel2.Size = new System.Drawing.Size(540, 370);
             this.panel2.TabIndex = 6;
             // 
             // tableLayoutPanel1
@@ -140,17 +145,19 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this.panel6, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.panel3, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.panel5, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.panel5, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.panel4, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.panel7, 0, 3);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(1, 31);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 4;
+            this.tableLayoutPanel1.RowCount = 5;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 110F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(536, 270);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(538, 338);
             this.tableLayoutPanel1.TabIndex = 6;
             // 
             // panel6
@@ -160,11 +167,23 @@
             this.panel6.Controls.Add(this.buttonChangeSmtQty);
             this.panel6.Controls.Add(this.labelProductionInfo);
             this.panel6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel6.Location = new System.Drawing.Point(1, 161);
+            this.panel6.Location = new System.Drawing.Point(1, 168);
             this.panel6.Margin = new System.Windows.Forms.Padding(1);
             this.panel6.Name = "panel6";
-            this.panel6.Size = new System.Drawing.Size(534, 58);
+            this.panel6.Size = new System.Drawing.Size(536, 55);
             this.panel6.TabIndex = 8;
+            // 
+            // buttonChangeSmtQty
+            // 
+            this.buttonChangeSmtQty.Dock = System.Windows.Forms.DockStyle.Right;
+            this.buttonChangeSmtQty.Enabled = false;
+            this.buttonChangeSmtQty.Location = new System.Drawing.Point(446, 0);
+            this.buttonChangeSmtQty.Name = "buttonChangeSmtQty";
+            this.buttonChangeSmtQty.Size = new System.Drawing.Size(88, 53);
+            this.buttonChangeSmtQty.TabIndex = 7;
+            this.buttonChangeSmtQty.Text = "Zmień ilość SMT";
+            this.buttonChangeSmtQty.UseVisualStyleBackColor = true;
+            this.buttonChangeSmtQty.Click += new System.EventHandler(this.buttonChangeSmtQty_Click);
             // 
             // labelProductionInfo
             // 
@@ -185,20 +204,8 @@
             this.panel3.Location = new System.Drawing.Point(1, 111);
             this.panel3.Margin = new System.Windows.Forms.Padding(1);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(534, 48);
+            this.panel3.Size = new System.Drawing.Size(536, 55);
             this.panel3.TabIndex = 0;
-            // 
-            // buttonChangeSmtQty
-            // 
-            this.buttonChangeSmtQty.Dock = System.Windows.Forms.DockStyle.Right;
-            this.buttonChangeSmtQty.Enabled = false;
-            this.buttonChangeSmtQty.Location = new System.Drawing.Point(444, 0);
-            this.buttonChangeSmtQty.Name = "buttonChangeSmtQty";
-            this.buttonChangeSmtQty.Size = new System.Drawing.Size(88, 56);
-            this.buttonChangeSmtQty.TabIndex = 7;
-            this.buttonChangeSmtQty.Text = "Zmień ilość SMT";
-            this.buttonChangeSmtQty.UseVisualStyleBackColor = true;
-            this.buttonChangeSmtQty.Click += new System.EventHandler(this.buttonChangeSmtQty_Click);
             // 
             // labelOrderInfo
             // 
@@ -217,10 +224,10 @@
             this.panel5.Controls.Add(this.labelTeorUsage);
             this.panel5.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel5.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.panel5.Location = new System.Drawing.Point(1, 221);
+            this.panel5.Location = new System.Drawing.Point(1, 282);
             this.panel5.Margin = new System.Windows.Forms.Padding(1);
             this.panel5.Name = "panel5";
-            this.panel5.Size = new System.Drawing.Size(534, 48);
+            this.panel5.Size = new System.Drawing.Size(536, 55);
             this.panel5.TabIndex = 7;
             // 
             // labelRealUsage
@@ -252,7 +259,7 @@
             this.panel4.Location = new System.Drawing.Point(1, 1);
             this.panel4.Margin = new System.Windows.Forms.Padding(1);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(534, 108);
+            this.panel4.Size = new System.Drawing.Size(536, 108);
             this.panel4.TabIndex = 1;
             // 
             // labelModelInfo
@@ -276,11 +283,54 @@
             this.pictureBox1.TabIndex = 5;
             this.pictureBox1.TabStop = false;
             // 
+            // panel7
+            // 
+            this.panel7.BackColor = System.Drawing.Color.White;
+            this.panel7.Controls.Add(this.label1);
+            this.panel7.Controls.Add(this.labelScrap);
+            this.panel7.Controls.Add(this.labelNg);
+            this.panel7.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel7.Location = new System.Drawing.Point(1, 225);
+            this.panel7.Margin = new System.Windows.Forms.Padding(1);
+            this.panel7.Name = "panel7";
+            this.panel7.Size = new System.Drawing.Size(536, 55);
+            this.panel7.TabIndex = 9;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label1.Location = new System.Drawing.Point(3, 2);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(130, 17);
+            this.label1.TabIndex = 7;
+            this.label1.Text = "Kontrola wzrokowa:";
+            // 
+            // labelNg
+            // 
+            this.labelNg.AutoSize = true;
+            this.labelNg.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.labelNg.Location = new System.Drawing.Point(29, 18);
+            this.labelNg.Name = "labelNg";
+            this.labelNg.Size = new System.Drawing.Size(33, 17);
+            this.labelNg.TabIndex = 8;
+            this.labelNg.Text = "NG:";
+            // 
+            // labelScrap
+            // 
+            this.labelScrap.AutoSize = true;
+            this.labelScrap.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.labelScrap.Location = new System.Drawing.Point(4, 35);
+            this.labelScrap.Name = "labelScrap";
+            this.labelScrap.Size = new System.Drawing.Size(58, 17);
+            this.labelScrap.TabIndex = 9;
+            this.labelScrap.Text = "SCRAP:";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(538, 651);
+            this.ClientSize = new System.Drawing.Size(540, 651);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
@@ -302,6 +352,8 @@
             this.panel4.ResumeLayout(false);
             this.panel4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            this.panel7.ResumeLayout(false);
+            this.panel7.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -327,6 +379,10 @@
         private System.Windows.Forms.Panel panel6;
         private System.Windows.Forms.Label labelProductionInfo;
         private System.Windows.Forms.Button buttonChangeSmtQty;
+        private System.Windows.Forms.Panel panel7;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelScrap;
+        private System.Windows.Forms.Label labelNg;
     }
 }
 

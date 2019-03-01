@@ -27,10 +27,10 @@ namespace Zużycie_LED_do_zlecenia
         MST.MES.OrderStructureByOrderNo.SMT smtData = new MST.MES.OrderStructureByOrderNo.SMT();
         MST.MES.ModelInfo.ModelSpecification modelSpec = new MST.MES.ModelInfo.ModelSpecification();
         MST.MES.OrderStructureByOrderNo.TestInfo testData = new MST.MES.OrderStructureByOrderNo.TestInfo();
+        MST.MES.OrderStructureByOrderNo.VisualInspection viData = new MST.MES.OrderStructureByOrderNo.VisualInspection();
+        string[] userList = new string[] { "piotr.dabrowski", "wojciech.komor", "katarzyna.kustra", "tomasz.jurkin", "grazyna.fabisiak", "mariola.czernis" };
+        string currentUser = Environment.UserName;
 
-        
-
-        
         private void textBoxOrderNo_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Return)
@@ -49,6 +49,7 @@ namespace Zużycie_LED_do_zlecenia
             kittingData = MST.MES.SqlDataReaderMethods.Kitting.GetOneOrderByDataReader(orderNo);
             smtData = MST.MES.SqlDataReaderMethods.SMT.GetOneOrder(orderNo);
             modelSpec = MST.MES.SqlDataReaderMethods.MesModels.mesModel(kittingData.modelId);
+            viData = MST.MES.SqlDataReaderMethods.VisualInspection.GetViForOneOrder(orderNo);
             //testData = MST.MES.SqlDataReaderMethods.LedTest.GetTestRecordsForOneOrder(MST.MES.SqlDataReaderMethods.LedTest.TesterIdToName(), orderNo, -1);
 
             DataTable result = new DataTable();
@@ -91,14 +92,21 @@ namespace Zużycie_LED_do_zlecenia
 
         private void buttonEndOrder_Click(object sender, EventArgs e)
         {
-            DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie." + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
-            if (dialogResult == DialogResult.Yes)
+            if (userList.Contains(currentUser))
             {
-                MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
-                MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
+                DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie." + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
+                if (dialogResult == DialogResult.Yes)
+                {
+                    MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
+                    MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
 
-                labelStatus.Text = $"Status: zlecenie zakończone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
-                buttonEndOrder.Visible = false;
+                    labelStatus.Text = $"Status: zlecenie zakończone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
+                    buttonEndOrder.Visible = false;
+                }
+            }
+            else
+            {
+                MessageBox.Show("Brak uprawnień");
             }
         }
 
@@ -159,11 +167,30 @@ namespace Zużycie_LED_do_zlecenia
             pictureBox1.Visible = false;
 
             labelProductionInfo.Text = $"Ilość po SMT: {smtData.totalManufacturedQty}" + Environment.NewLine;
+
             if (smtData.totalManufacturedQty > 0) {
                 buttonChangeSmtQty.Enabled = true;
             }
             else {
                 buttonChangeSmtQty.Enabled = false;
+            }
+
+            int realNg = viData.ngCount - viData.reworkedOkCout;
+            labelNg.Text = $"NG: {realNg} szt.";
+            if (viData.ngCount > 0)
+            {
+                int waitingForRepair = viData.ngScrapList.Where(r => !r.reworkOK.HasValue & r.viInspectionResult == "NG").Count();
+                string textForRepair = "";
+                if (waitingForRepair > 0)
+                {
+                    textForRepair = $", oczekujących na naprawę: {waitingForRepair}szt.";
+                }
+                labelNg.Text += $" (naprawionych {viData.reworkedOkCout}szt.{textForRepair})";
+            }
+            labelScrap.Text = $"SCRAP: {viData.scrapCount} szt.";
+            if (viData.reworkFailedCout > 0)
+            {
+                labelScrap.Text += $" (w tym {viData.reworkFailedCout}szt. - nieudana naprawa)";
             }
         }
 
@@ -192,14 +219,22 @@ namespace Zużycie_LED_do_zlecenia
             {
                 if (dataGridView1.Columns[e.ColumnIndex].Name== "butCol")
                 {
-                    string nc12 = dataGridView1.Rows[e.RowIndex].Cells["LED_12NC"].Value.ToString();
-                    string id = dataGridView1.Rows[e.RowIndex].Cells["ID"].Value.ToString();
-
-                    using (EditLedQty editForm = new EditLedQty(nc12, id, kittingData.orderNo))
+                    if (userList.Contains(currentUser))
                     {
-                        if (editForm.ShowDialog() == DialogResult.OK) {
-                            ReloadCurrentOrder();
+                        string nc12 = dataGridView1.Rows[e.RowIndex].Cells["LED_12NC"].Value.ToString();
+                        string id = dataGridView1.Rows[e.RowIndex].Cells["ID"].Value.ToString();
+
+                        using (EditLedQty editForm = new EditLedQty(nc12, id, kittingData.orderNo))
+                        {
+                            if (editForm.ShowDialog() == DialogResult.OK)
+                            {
+                                ReloadCurrentOrder();
+                            }
                         }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Brak uprawnień");
                     }
                 }
             }
@@ -215,10 +250,19 @@ namespace Zużycie_LED_do_zlecenia
 
         private void buttonChangeSmtQty_Click(object sender, EventArgs e)
         {
-            using (ChangeSMTqty changeForm = new ChangeSMTqty(smtData.smtOrders)) {
-                if (changeForm.ShowDialog() == DialogResult.OK) {
-                    ReloadCurrentOrder();
+            if (userList.Contains(currentUser))
+            {
+                using (ChangeSMTqty changeForm = new ChangeSMTqty(smtData.smtOrders))
+                {
+                    if (changeForm.ShowDialog() == DialogResult.OK)
+                    {
+                        ReloadCurrentOrder();
+                    }
                 }
+            }
+            else
+            {
+                MessageBox.Show("Brak uprawnień");
             }
         }
     }

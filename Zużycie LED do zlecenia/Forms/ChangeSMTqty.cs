@@ -29,7 +29,7 @@ namespace Zużycie_LED_do_zlecenia.Forms
                     smtRecord.smtLine,
                     smtRecord.manufacturedQty,
                     smtRecord.operatorSmt,
-                    smtRecord.orderInfo.modelId,
+                    smtRecord.orderInfo.modelId.Insert(4, " ").Insert(8, " "),
                     smtRecord.recordId
                 );
             }
@@ -119,7 +119,7 @@ namespace Zużycie_LED_do_zlecenia.Forms
                 if (row.Cells["ColQty"].Style.BackColor == Color.Orange) {
                     int dbId = int.Parse(row.Cells["ColDbId"].Value.ToString());
                     int newQty = int.Parse(row.Cells["ColQty"].Value.ToString());
-                    //MST.MES.SqlOperations.SMT.UpdateSmtRecordQty(dbId, newQty);
+                    SqlTools.UpdateCurrentMstOrderQuantity(newQty, dbId);
                 }
             }
 
