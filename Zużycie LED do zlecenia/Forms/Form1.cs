@@ -28,6 +28,8 @@ namespace Zużycie_LED_do_zlecenia
         MST.MES.ModelInfo.ModelSpecification modelSpec = new MST.MES.ModelInfo.ModelSpecification();
         MST.MES.OrderStructureByOrderNo.TestInfo testData = new MST.MES.OrderStructureByOrderNo.TestInfo();
         MST.MES.OrderStructureByOrderNo.VisualInspection viData = new MST.MES.OrderStructureByOrderNo.VisualInspection();
+        List<MST.MES.OrderStructureByOrderNo.BoxingInfo> boxingData = new List<MST.MES.OrderStructureByOrderNo.BoxingInfo>();
+
         string[] userList = new string[] { "piotr.dabrowski", "wojciech.komor", "katarzyna.kustra", "tomasz.jurkin", "grazyna.fabisiak", "mariola.czernis" };
         string currentUser = Environment.UserName;
 
@@ -35,6 +37,7 @@ namespace Zużycie_LED_do_zlecenia
         {
             if (e.KeyCode == Keys.Return)
             {
+                
                 pictureBox1.Visible = true;
                 backgroundWorker1.RunWorkerAsync();
                 ledsUsed = 0;   
@@ -47,47 +50,51 @@ namespace Zużycie_LED_do_zlecenia
             detailedLedInfoDict = new Dictionary<string, DataTable>();
             string orderNo = textBoxOrderNo.Text;
             kittingData = MST.MES.SqlDataReaderMethods.Kitting.GetOneOrderByDataReader(orderNo);
-            smtData = MST.MES.SqlDataReaderMethods.SMT.GetOneOrder(orderNo);
-            modelSpec = MST.MES.SqlDataReaderMethods.MesModels.mesModel(kittingData.modelId);
-            viData = MST.MES.SqlDataReaderMethods.VisualInspection.GetViForOneOrder(orderNo);
-            //testData = MST.MES.SqlDataReaderMethods.LedTest.GetTestRecordsForOneOrder(MST.MES.SqlDataReaderMethods.LedTest.TesterIdToName(), orderNo, -1);
-
-            DataTable result = new DataTable();
-            if (kittingData.orderNo != null)
+            if (kittingData.modelId != null)
             {
-                DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
-                backgroundWorker1.ReportProgress(50, 0);
-                Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = LedTools.FullLedInfo(sqlLedsForOrder);
-                backgroundWorker1.ReportProgress(80, 0);
-                result.Columns.Add("LED_12NC");
-                result.Columns.Add("ID");
-                result.Columns.Add("Partia");
-                result.Columns.Add("Ilosc zużyta");
-                result.Columns.Add("Ilosc aktualna");
+                smtData = MST.MES.SqlDataReaderMethods.SMT.GetOneOrder(orderNo);
+                modelSpec = MST.MES.SqlDataReaderMethods.MesModels.mesModel(kittingData.modelId);
+                viData = MST.MES.SqlDataReaderMethods.VisualInspection.GetViForOneOrder(orderNo);
+                //testData = MST.MES.SqlDataReaderMethods.LedTest.GetTestRecordsForOneOrder(MST.MES.SqlDataReaderMethods.LedTest.TesterIdToName(), orderNo, -1);
+                boxingData = MST.MES.SqlDataReaderMethods.Boxing.GetBoxingForOneOrder(kittingData.orderNo);
 
-                foreach (var nc12Entry in detailedLedInfo)
+                DataTable result = new DataTable();
+                if (kittingData.orderNo != null)
                 {
-                    foreach (var idEntry in nc12Entry.Value)
+                    DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
+                    backgroundWorker1.ReportProgress(50, 0);
+                    Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = LedTools.FullLedInfo(sqlLedsForOrder);
+                    backgroundWorker1.ReportProgress(80, 0);
+                    result.Columns.Add("LED_12NC");
+                    result.Columns.Add("ID");
+                    result.Columns.Add("Partia");
+                    result.Columns.Add("Ilosc zużyta");
+                    result.Columns.Add("Ilosc aktualna");
+
+                    foreach (var nc12Entry in detailedLedInfo)
                     {
-                        double totalQty = 0;
-                        string partia = idEntry.Value.Rows[0]["Partia"].ToString();
-                        detailedLedInfoDict.Add(nc12Entry.Key + idEntry.Key, idEntry.Value);
-                        foreach (DataRow row in idEntry.Value.Rows)
+                        foreach (var idEntry in nc12Entry.Value)
                         {
-                            string zlecenieString = row["ZlecenieString"].ToString();
-                            if (zlecenieString != kittingData.orderNo) continue;
+                            double totalQty = 0;
+                            string partia = idEntry.Value.Rows[0]["Partia"].ToString();
+                            detailedLedInfoDict.Add(nc12Entry.Key + idEntry.Key, idEntry.Value);
+                            foreach (DataRow row in idEntry.Value.Rows)
+                            {
+                                string zlecenieString = row["ZlecenieString"].ToString();
+                                if (zlecenieString != kittingData.orderNo) continue;
 
-                            int usedLed = int.Parse(row["zuzycie"].ToString());
-                            totalQty += usedLed;
+                                int usedLed = int.Parse(row["zuzycie"].ToString());
+                                totalQty += usedLed;
+                            }
+                            int currentQty = int.Parse(idEntry.Value.Rows[idEntry.Value.Rows.Count - 1]["qty"].ToString());
+
+                            ledsUsed += totalQty;
+                            result.Rows.Add(nc12Entry.Key, idEntry.Key, partia, totalQty, currentQty);
                         }
-                        int currentQty = int.Parse(idEntry.Value.Rows[idEntry.Value.Rows.Count - 1]["qty"].ToString());
-
-                        ledsUsed += totalQty;
-                        result.Rows.Add(nc12Entry.Key, idEntry.Key, partia, totalQty, currentQty);
                     }
                 }
+                sourceTable = result;
             }
-            sourceTable = result;
         }
 
         private void buttonEndOrder_Click(object sender, EventArgs e)
@@ -129,68 +136,78 @@ namespace Zużycie_LED_do_zlecenia
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            dataGridView1.DataSource = sourceTable;
-            dataGridView1.Columns["butCol"].DisplayIndex = dataGridView1.Columns.Count - 1;
-
-            foreach (DataGridViewColumn column in dataGridView1.Columns)
+            if (kittingData.modelId != null)
             {
-                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            }
+                dataGridView1.DataSource = sourceTable;
+                dataGridView1.Columns["butCol"].DisplayIndex = dataGridView1.Columns.Count - 1;
 
-            if (kittingData.endDate < DateTime.Now.AddYears(-50))
-            {
-                labelStatus.Text = $"Status: zlecenie nie jest zakończone!";
-                buttonEndOrder.Visible = true;
-            }
-            else
-            {
-                labelStatus.Text = $"Status: zlecenie zakończone: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}";
-                buttonEndOrder.Visible = false;
-            }
-
-            labelOrderInfo.Text =
-                $"Data utworzenia zlecenia: {kittingData.kittingDate.ToShortDateString()}" +
-                Environment.NewLine + $"Ilość zamówienia: {kittingData.orderedQty}";
-                
-
-            labelModelInfo.Text = modelSpec.modelName + Environment.NewLine
-                + kittingData.modelId.Insert(4, " ").Insert(8, " ") + Environment.NewLine
-                + $"Ilość PCB/MB: {modelSpec.pcbCountPerMB + Environment.NewLine}"
-                + $"Ilość LED: {modelSpec.ledCountPerModel + Environment.NewLine}"
-                + $"Ilość Res: {modelSpec.resistorCountPerModel + Environment.NewLine}"
-                + $"Ilość Conn: {modelSpec.connectorCountPerModel + Environment.NewLine}";
-
-            var nfi = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
-            nfi.NumberGroupSeparator = " ";
-            labelTeorUsage.Text = $"Teoretyczne zużycie LED: {smtData.totalManufacturedQty}szt. PCB x {modelSpec.ledCountPerModel}LED = {(smtData.totalManufacturedQty * modelSpec.ledCountPerModel).ToString("#,0", nfi)}";
-            labelRealUsage.Text = $"Rzeczywiste zużycie LED: {ledsUsed.ToString("#,0", nfi)}";
-            pictureBox1.Visible = false;
-
-            labelProductionInfo.Text = $"Ilość po SMT: {smtData.totalManufacturedQty}" + Environment.NewLine;
-
-            if (smtData.totalManufacturedQty > 0) {
-                buttonChangeSmtQty.Enabled = true;
-            }
-            else {
-                buttonChangeSmtQty.Enabled = false;
-            }
-
-            int realNg = viData.ngCount - viData.reworkedOkCout;
-            labelNg.Text = $"NG: {realNg} szt.";
-            if (viData.ngCount > 0)
-            {
-                int waitingForRepair = viData.ngScrapList.Where(r => !r.reworkOK.HasValue & r.viInspectionResult == "NG").Count();
-                string textForRepair = "";
-                if (waitingForRepair > 0)
+                foreach (DataGridViewColumn column in dataGridView1.Columns)
                 {
-                    textForRepair = $", oczekujących na naprawę: {waitingForRepair}szt.";
+                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                 }
-                labelNg.Text += $" (naprawionych {viData.reworkedOkCout}szt.{textForRepair})";
-            }
-            labelScrap.Text = $"SCRAP: {viData.scrapCount} szt.";
-            if (viData.reworkFailedCout > 0)
-            {
-                labelScrap.Text += $" (w tym {viData.reworkFailedCout}szt. - nieudana naprawa)";
+
+                if (kittingData.endDate < DateTime.Now.AddYears(-50))
+                {
+                    labelStatus.Text = $"Status: zlecenie nie jest zakończone!";
+                    buttonEndOrder.Visible = true;
+                }
+                else
+                {
+                    labelStatus.Text = $"Status: zlecenie zakończone: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}";
+                    buttonEndOrder.Visible = false;
+                }
+
+                labelOrderInfo.Text =
+                    $"Data utworzenia zlecenia: {kittingData.kittingDate.ToShortDateString()}" +
+                    Environment.NewLine + $"Ilość zamówienia: {kittingData.orderedQty} szt.";
+
+
+                labelModelInfo.Text = modelSpec.modelName + Environment.NewLine
+                    + kittingData.modelId.Insert(4, " ").Insert(8, " ") + Environment.NewLine
+                    + $"Ilość PCB/MB: {modelSpec.pcbCountPerMB + Environment.NewLine}"
+                    + $"Ilość LED: {modelSpec.ledCountPerModel + Environment.NewLine}"
+                    + $"Ilość Res: {modelSpec.resistorCountPerModel + Environment.NewLine}"
+                    + $"Ilość Conn: {modelSpec.connectorCountPerModel + Environment.NewLine}";
+
+                var nfi = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
+                nfi.NumberGroupSeparator = " ";
+                labelTeorUsage.Text = $"Teoretyczne zużycie LED: {smtData.totalManufacturedQty}szt. PCB x {modelSpec.ledCountPerModel}LED = {(smtData.totalManufacturedQty * modelSpec.ledCountPerModel).ToString("#,0", nfi)}";
+                labelRealUsage.Text = $"Rzeczywiste zużycie LED: {ledsUsed.ToString("#,0", nfi)}";
+                pictureBox1.Visible = false;
+
+                labelProductionInfo.Text = $"Ilość po SMT: {smtData.totalManufacturedQty} szt." + Environment.NewLine;
+                labelSmtDate.Text = $"Produkcja  od: {smtData.earliestStart.ToString("HH:mm dd-MM-yyyy")} do: {smtData.latestEnd.ToString("HH:mm dd-MM-yyyy")}";
+                labelSmtLines.Text = "Linia SMT: " + string.Join(", ", smtData.smtLinesInvolved);
+
+                labelPackedQty.Text = $"Spakowanych wyrobów: {boxingData.Count().ToString()} szt.";
+                labelBoxesCount.Text = $"Ilość kartonów: {boxingData.Select(m => m.boxId).Distinct().Count()} szt.";
+
+                if (smtData.totalManufacturedQty > 0)
+                {
+                    buttonChangeSmtQty.Enabled = true;
+                }
+                else
+                {
+                    buttonChangeSmtQty.Enabled = false;
+                }
+
+                int realNg = viData.ngCount;
+                labelNg.Text = $"NG: {realNg} szt.";
+                if (viData.ngCount > 0)
+                {
+                    int waitingForRepair = viData.ngScrapList.Where(r => !r.reworkOK.HasValue & r.viInspectionResult == "NG").Count();
+                    string textForRepair = "";
+                    if (waitingForRepair > 0)
+                    {
+                        textForRepair = $", oczekujących na naprawę: {waitingForRepair}szt.";
+                    }
+                    labelNg.Text += $" (naprawionych {viData.reworkedOkCout}szt.{textForRepair})";
+                }
+                labelScrap.Text = $"SCRAP: {viData.scrapCount} szt.";
+                if (viData.reworkFailedCout > 0)
+                {
+                    labelScrap.Text += $" (w tym {viData.reworkFailedCout}szt. - nieudana naprawa)";
+                }
             }
         }
 
