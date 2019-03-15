@@ -44,30 +44,30 @@
             this.panel3 = new System.Windows.Forms.Panel();
             this.label4 = new System.Windows.Forms.Label();
             this.labelOrderInfo = new System.Windows.Forms.Label();
+            this.panel8 = new System.Windows.Forms.Panel();
+            this.labelBoxesCount = new System.Windows.Forms.Label();
+            this.labelPackedQty = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.panel5 = new System.Windows.Forms.Panel();
             this.labelRealUsage = new System.Windows.Forms.Label();
             this.labelTeorUsage = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.labelModelInfo = new System.Windows.Forms.Label();
             this.panel7 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.labelScrap = new System.Windows.Forms.Label();
             this.labelNg = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
-            this.panel8 = new System.Windows.Forms.Panel();
-            this.label3 = new System.Windows.Forms.Label();
-            this.labelPackedQty = new System.Windows.Forms.Label();
-            this.labelBoxesCount = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel6.SuspendLayout();
             this.panel3.SuspendLayout();
+            this.panel8.SuspendLayout();
             this.panel5.SuspendLayout();
             this.panel4.SuspendLayout();
-            this.panel7.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
-            this.panel8.SuspendLayout();
+            this.panel7.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBoxOrderNo
@@ -264,6 +264,50 @@
             this.labelOrderInfo.TabIndex = 6;
             this.labelOrderInfo.Text = "Zlecenie:";
             // 
+            // panel8
+            // 
+            this.panel8.BackColor = System.Drawing.Color.White;
+            this.panel8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel8.Controls.Add(this.labelBoxesCount);
+            this.panel8.Controls.Add(this.labelPackedQty);
+            this.panel8.Controls.Add(this.label3);
+            this.panel8.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel8.Location = new System.Drawing.Point(1, 346);
+            this.panel8.Margin = new System.Windows.Forms.Padding(1);
+            this.panel8.Name = "panel8";
+            this.panel8.Size = new System.Drawing.Size(517, 58);
+            this.panel8.TabIndex = 10;
+            // 
+            // labelBoxesCount
+            // 
+            this.labelBoxesCount.AutoSize = true;
+            this.labelBoxesCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.labelBoxesCount.Location = new System.Drawing.Point(73, 37);
+            this.labelBoxesCount.Name = "labelBoxesCount";
+            this.labelBoxesCount.Size = new System.Drawing.Size(101, 17);
+            this.labelBoxesCount.TabIndex = 10;
+            this.labelBoxesCount.Text = "Ilość kartonów:";
+            // 
+            // labelPackedQty
+            // 
+            this.labelPackedQty.AutoSize = true;
+            this.labelPackedQty.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.labelPackedQty.Location = new System.Drawing.Point(13, 20);
+            this.labelPackedQty.Name = "labelPackedQty";
+            this.labelPackedQty.Size = new System.Drawing.Size(161, 17);
+            this.labelPackedQty.TabIndex = 9;
+            this.labelPackedQty.Text = "Spakowanych wyrobów: ";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.label3.Location = new System.Drawing.Point(5, 3);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(85, 17);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "Pakowanie";
+            // 
             // panel5
             // 
             this.panel5.BackColor = System.Drawing.Color.DarkRed;
@@ -310,6 +354,16 @@
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(517, 108);
             this.panel4.TabIndex = 1;
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::Zużycie_LED_do_zlecenia.Properties.Resources.loading_bar;
+            this.pictureBox1.Location = new System.Drawing.Point(45, 36);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(408, 22);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox1.TabIndex = 5;
+            this.pictureBox1.TabStop = false;
             // 
             // labelModelInfo
             // 
@@ -366,60 +420,6 @@
             this.labelNg.TabIndex = 8;
             this.labelNg.Text = "NG:";
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::Zużycie_LED_do_zlecenia.Properties.Resources.loading_bar;
-            this.pictureBox1.Location = new System.Drawing.Point(72, 15);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(408, 22);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 5;
-            this.pictureBox1.TabStop = false;
-            // 
-            // panel8
-            // 
-            this.panel8.BackColor = System.Drawing.Color.White;
-            this.panel8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel8.Controls.Add(this.labelBoxesCount);
-            this.panel8.Controls.Add(this.labelPackedQty);
-            this.panel8.Controls.Add(this.label3);
-            this.panel8.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel8.Location = new System.Drawing.Point(1, 346);
-            this.panel8.Margin = new System.Windows.Forms.Padding(1);
-            this.panel8.Name = "panel8";
-            this.panel8.Size = new System.Drawing.Size(517, 58);
-            this.panel8.TabIndex = 10;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.label3.Location = new System.Drawing.Point(5, 3);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(85, 17);
-            this.label3.TabIndex = 8;
-            this.label3.Text = "Pakowanie";
-            // 
-            // labelPackedQty
-            // 
-            this.labelPackedQty.AutoSize = true;
-            this.labelPackedQty.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.labelPackedQty.Location = new System.Drawing.Point(13, 20);
-            this.labelPackedQty.Name = "labelPackedQty";
-            this.labelPackedQty.Size = new System.Drawing.Size(161, 17);
-            this.labelPackedQty.TabIndex = 9;
-            this.labelPackedQty.Text = "Spakowanych wyrobów: ";
-            // 
-            // labelBoxesCount
-            // 
-            this.labelBoxesCount.AutoSize = true;
-            this.labelBoxesCount.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.labelBoxesCount.Location = new System.Drawing.Point(73, 37);
-            this.labelBoxesCount.Name = "labelBoxesCount";
-            this.labelBoxesCount.Size = new System.Drawing.Size(101, 17);
-            this.labelBoxesCount.TabIndex = 10;
-            this.labelBoxesCount.Text = "Ilość kartonów:";
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -438,15 +438,15 @@
             this.panel6.PerformLayout();
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
+            this.panel8.ResumeLayout(false);
+            this.panel8.PerformLayout();
             this.panel5.ResumeLayout(false);
             this.panel5.PerformLayout();
             this.panel4.ResumeLayout(false);
             this.panel4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel7.ResumeLayout(false);
             this.panel7.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
-            this.panel8.ResumeLayout(false);
-            this.panel8.PerformLayout();
             this.ResumeLayout(false);
 
         }
