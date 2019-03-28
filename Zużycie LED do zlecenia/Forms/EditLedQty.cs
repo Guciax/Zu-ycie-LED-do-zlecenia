@@ -63,7 +63,7 @@ namespace Zużycie_LED_do_zlecenia
         private void button1_Click(object sender, EventArgs e)
         {
 
-            if (newLedQty > 0) 
+            if (newLedQty >= 0) 
             {
                 if (newLedQty < reelsCurrentQty)
                 {
@@ -83,7 +83,7 @@ namespace Zużycie_LED_do_zlecenia
                 }
                 else
                 {
-                    MessageBox.Show("Nowa ilość musi być mniejsza od starej");
+                   MessageBox.Show("Nowa ilość musi być mniejsza od starej");
                 }
             }
             else

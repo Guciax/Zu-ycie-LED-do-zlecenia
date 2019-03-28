@@ -282,5 +282,19 @@ namespace Zużycie_LED_do_zlecenia
                 MessageBox.Show("Brak uprawnień");
             }
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            using (LoadOrderFromHistory historyForm = new LoadOrderFromHistory())
+            {
+                if (historyForm.ShowDialog() == DialogResult.OK)
+                {
+                    textBoxOrderNo.Text = historyForm.selectedOrderNumber;
+                    pictureBox1.Visible = true;
+                    backgroundWorker1.RunWorkerAsync();
+                    ledsUsed = 0;
+                }
+            }
+        }
     }
 }

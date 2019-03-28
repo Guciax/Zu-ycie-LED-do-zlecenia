@@ -52,12 +52,14 @@
             this.labelRealUsage = new System.Windows.Forms.Label();
             this.labelTeorUsage = new System.Windows.Forms.Label();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.labelModelInfo = new System.Windows.Forms.Label();
             this.panel7 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.labelScrap = new System.Windows.Forms.Label();
             this.labelNg = new System.Windows.Forms.Label();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.button1 = new System.Windows.Forms.Button();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -66,17 +68,20 @@
             this.panel8.SuspendLayout();
             this.panel5.SuspendLayout();
             this.panel4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.panel7.SuspendLayout();
+            this.panel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // textBoxOrderNo
             // 
             this.textBoxOrderNo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBoxOrderNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.textBoxOrderNo.Location = new System.Drawing.Point(3, 3);
+            this.textBoxOrderNo.Location = new System.Drawing.Point(0, 0);
+            this.textBoxOrderNo.Margin = new System.Windows.Forms.Padding(1);
+            this.textBoxOrderNo.Multiline = true;
             this.textBoxOrderNo.Name = "textBoxOrderNo";
-            this.textBoxOrderNo.Size = new System.Drawing.Size(513, 30);
+            this.textBoxOrderNo.Size = new System.Drawing.Size(465, 33);
             this.textBoxOrderNo.TabIndex = 0;
             this.textBoxOrderNo.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxOrderNo_KeyDown);
             // 
@@ -142,11 +147,11 @@
             this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 8);
             this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.panel3, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.textBoxOrderNo, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.panel8, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.panel5, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.panel4, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.panel7, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.panel2, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -355,16 +360,6 @@
             this.panel4.Size = new System.Drawing.Size(517, 108);
             this.panel4.TabIndex = 1;
             // 
-            // pictureBox1
-            // 
-            this.pictureBox1.Image = global::Zużycie_LED_do_zlecenia.Properties.Resources.loading_bar;
-            this.pictureBox1.Location = new System.Drawing.Point(45, 36);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(408, 22);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBox1.TabIndex = 5;
-            this.pictureBox1.TabStop = false;
-            // 
             // labelModelInfo
             // 
             this.labelModelInfo.AutoSize = true;
@@ -420,6 +415,39 @@
             this.labelNg.TabIndex = 8;
             this.labelNg.Text = "NG:";
             // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.textBoxOrderNo);
+            this.panel2.Controls.Add(this.button1);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Location = new System.Drawing.Point(1, 1);
+            this.panel2.Margin = new System.Windows.Forms.Padding(1);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(517, 33);
+            this.panel2.TabIndex = 11;
+            // 
+            // button1
+            // 
+            this.button1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.button1.Location = new System.Drawing.Point(465, 0);
+            this.button1.Margin = new System.Windows.Forms.Padding(1);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(52, 33);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "Historia";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Image = global::Zużycie_LED_do_zlecenia.Properties.Resources.loading_bar;
+            this.pictureBox1.Location = new System.Drawing.Point(45, 36);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(408, 22);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pictureBox1.TabIndex = 5;
+            this.pictureBox1.TabStop = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -433,7 +461,6 @@
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
             this.panel6.ResumeLayout(false);
             this.panel6.PerformLayout();
             this.panel3.ResumeLayout(false);
@@ -444,9 +471,11 @@
             this.panel5.PerformLayout();
             this.panel4.ResumeLayout(false);
             this.panel4.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel7.ResumeLayout(false);
             this.panel7.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -483,6 +512,8 @@
         private System.Windows.Forms.Label labelBoxesCount;
         private System.Windows.Forms.Label labelPackedQty;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Button button1;
     }
 }
 
