@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Zużycie_LED_do_zlecenia.Forms
 {
     public partial class LoadOrderFromHistory : Form
     {
-        Dictionary<string, MST.MES.OrderStructureByOrderNo.Kitting> ordersKitting = new Dictionary<string, MST.MES.OrderStructureByOrderNo.Kitting>();
-        Dictionary<string, MST.MES.OrderStructureByOrderNo.SMT> ordersSmt = new Dictionary<string, MST.MES.OrderStructureByOrderNo.SMT>();
-        Dictionary<string, List<MST.MES.OrderStructureByOrderNo.BoxingInfo>> ordersBox = new Dictionary<string, List<MST.MES.OrderStructureByOrderNo.BoxingInfo>>();
+        private Dictionary<string, MST.MES.OrderStructureByOrderNo.Kitting> ordersKitting = new Dictionary<string, MST.MES.OrderStructureByOrderNo.Kitting>();
+        private Dictionary<string, MST.MES.OrderStructureByOrderNo.SMT> ordersSmt = new Dictionary<string, MST.MES.OrderStructureByOrderNo.SMT>();
+        private Dictionary<string, List<MST.MES.OrderStructureByOrderNo.BoxingInfo>> ordersBox = new Dictionary<string, List<MST.MES.OrderStructureByOrderNo.BoxingInfo>>();
         public string selectedOrderNumber = "";
 
         public LoadOrderFromHistory()
@@ -25,7 +22,7 @@ namespace Zużycie_LED_do_zlecenia.Forms
         private void LoadOrderFromHistory_Load(object sender, EventArgs e)
         {
             ordersKitting = MST.MES.SqlDataReaderMethods.Kitting.GetOrdersInfoByDataReader(30);
-            var orders = ordersKitting.Where(o=>o.Value.odredGroup=="MST").Select(o => o.Key).ToArray();
+            var orders = ordersKitting.Where(o => o.Value.odredGroup == "MST").Select(o => o.Key).ToArray();
             ordersSmt = MST.MES.SqlDataReaderMethods.SMT.GetOrders(orders);
             ordersBox = MST.MES.SqlDataReaderMethods.Boxing.GetMstBoxingForOrders(orders);
             FillOutGrid(orders);
@@ -49,16 +46,15 @@ namespace Zużycie_LED_do_zlecenia.Forms
 
                 if (ordersKitting[orderNumber].endDate > ordersKitting[orderNumber].kittingDate)
                 {
-                    dataGridView1.Rows.Insert(finishedOrdersIndex, "<- Wczytaj", ordersKitting[orderNumber].orderNo, ordersKitting[orderNumber].modelId_12NCFormat, ordersKitting[orderNumber].ModelName, ordersKitting[orderNumber].orderedQty, ordersKitting[orderNumber].kittingDate, smtQty, boxedQty);
-                    foreach (DataGridViewCell cell in dataGridView1.Rows[finishedOrdersIndex].Cells)
+                    dataGridView1.Rows.Add("<- Wczytaj", ordersKitting[orderNumber].orderNo, ordersKitting[orderNumber].modelId_12NCFormat, ordersKitting[orderNumber].ModelName, ordersKitting[orderNumber].orderedQty, ordersKitting[orderNumber].kittingDate, smtQty, boxedQty);
+                    foreach (DataGridViewCell cell in dataGridView1.Rows[dataGridView1.Rows.Count - 1].Cells)
                     {
                         cell.Style.BackColor = Color.Gray;
                     }
-                    
                 }
                 else
                 {
-                    dataGridView1.Rows.Insert(0, "<- Wczytaj", ordersKitting[orderNumber].orderNo, ordersKitting[orderNumber].modelId_12NCFormat, ordersKitting[orderNumber].ModelName, ordersKitting[orderNumber].orderedQty, ordersKitting[orderNumber].kittingDate, smtQty, boxedQty);
+                    dataGridView1.Rows.Insert(finishedOrdersIndex, "<- Wczytaj", ordersKitting[orderNumber].orderNo, ordersKitting[orderNumber].modelId_12NCFormat, ordersKitting[orderNumber].ModelName, ordersKitting[orderNumber].orderedQty, ordersKitting[orderNumber].kittingDate, smtQty, boxedQty);
                     finishedOrdersIndex++;
                 }
             }
@@ -70,7 +66,7 @@ namespace Zużycie_LED_do_zlecenia.Forms
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex>=0 & e.ColumnIndex == 0)
+            if (e.RowIndex >= 0 & e.ColumnIndex == 0)
             {
                 selectedOrderNumber = dataGridView1.Rows[e.RowIndex].Cells[1].Value.ToString();
                 this.DialogResult = DialogResult.OK;

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Zużycie_LED_do_zlecenia
 {
@@ -18,7 +16,7 @@ namespace Zużycie_LED_do_zlecenia
                 string nc12 = row["NC12"].ToString();
                 string id = row["ID"].ToString();
                 //string partia = row["Partia"].ToString();
-                if (ledsInLot.Select(l => l.Nc12).Contains(nc12) & ledsInLot.Select(l => l.Id).Contains(id)) continue;
+                if (ledsInLot.Select(l => l.uniqueNcId).Contains(nc12 + id)) continue;
                 ledsInLot.Add(new MST.MES.Data_structures.LedInfo(nc12, id));
             }
 
@@ -31,6 +29,7 @@ namespace Zużycie_LED_do_zlecenia
             templateTable.Columns.Add("zuzycie");
             templateTable.Columns.Add("zlecenieString");
             templateTable.Columns.Add("Data_Czas");
+            templateTable.Columns.Add("Lokacja");
 
             foreach (DataRow row in detailedLedTable.Rows)
             {
@@ -43,6 +42,7 @@ namespace Zużycie_LED_do_zlecenia
                 int zuzycie = 0;
 
                 string qty = row["Ilosc"].ToString();
+                if (qty == "") qty = "0";
 
                 if (!result.ContainsKey(nc12))
                 {
@@ -58,12 +58,12 @@ namespace Zużycie_LED_do_zlecenia
                 {
                     if (result[nc12][id].Rows[result[nc12][id].Rows.Count - 1]["zlecenieString"].ToString() == zlecenieString)
                     {
-                        int lastQty = int.Parse(result[nc12][id].Rows[result[nc12][id].Rows.Count - 1]["qty"].ToString());
-                        zuzycie = lastQty - int.Parse(qty);
+                        int lastQty = (int)Double.Parse(result[nc12][id].Rows[result[nc12][id].Rows.Count - 1]["qty"].ToString().ToUpper().Replace(".",","), System.Globalization.NumberStyles.Float);
+                        zuzycie = lastQty - (int)Decimal.Parse(qty.ToUpper().Replace(".",","), System.Globalization.NumberStyles.Float);
                     }
                 }
 
-                result[nc12][id].Rows.Add(nc12, id, partia, qty, zuzycie, zlecenieString, row["Data_Czas"].ToString());
+                result[nc12][id].Rows.Add(nc12, id, partia, qty, zuzycie, zlecenieString, row["Data_Czas"].ToString(), row["Z_RegSeg"].ToString());
             }
             return result;
         }

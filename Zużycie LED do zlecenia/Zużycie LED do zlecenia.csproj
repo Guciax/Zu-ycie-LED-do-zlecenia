@@ -36,9 +36,6 @@
     <Reference Include="CrashReporter.NET, Version=1.5.7.0, Culture=neutral, PublicKeyToken=7828e0fd88cab698, processorArchitecture=MSIL">
       <HintPath>..\packages\CrashReporter.NET.Official.1.5.7\lib\net452\CrashReporter.NET.dll</HintPath>
     </Reference>
-    <Reference Include="MST.MES">
-      <HintPath>..\..\MST.MES\MST.MES\bin\Release\MST.MES.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -129,6 +126,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\loading bar.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\MST.MES\MST.MES\MST.MES.csproj">
+      <Project>{3A75370E-11B7-4582-A6AF-73CAF3A9E997}</Project>
+      <Name>MST.MES</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

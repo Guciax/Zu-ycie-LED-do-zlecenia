@@ -29,16 +29,17 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.labelOrderNo = new System.Windows.Forms.Label();
-            this.labelBaseQty = new System.Windows.Forms.Label();
-            this.labelNewQty = new System.Windows.Forms.Label();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.button1 = new System.Windows.Forms.Button();
+            this.labelNewQty = new System.Windows.Forms.Label();
+            this.labelBaseQty = new System.Windows.Forms.Label();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColQty = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColNg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColDbId = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -57,6 +58,17 @@
             this.panel1.Size = new System.Drawing.Size(1047, 39);
             this.panel1.TabIndex = 0;
             // 
+            // labelOrderNo
+            // 
+            this.labelOrderNo.AutoSize = true;
+            this.labelOrderNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.labelOrderNo.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.labelOrderNo.Location = new System.Drawing.Point(12, 9);
+            this.labelOrderNo.Name = "labelOrderNo";
+            this.labelOrderNo.Size = new System.Drawing.Size(164, 20);
+            this.labelOrderNo.TabIndex = 0;
+            this.labelOrderNo.Text = "Wpisy dla zlecenia nr. ";
+            // 
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(0)))), ((int)(((byte)(36)))));
@@ -68,6 +80,40 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(1047, 59);
             this.panel2.TabIndex = 1;
+            // 
+            // button1
+            // 
+            this.button1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.button1.Enabled = false;
+            this.button1.Location = new System.Drawing.Point(823, 0);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(224, 59);
+            this.button1.TabIndex = 3;
+            this.button1.Text = "Zapisz zmiany";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // labelNewQty
+            // 
+            this.labelNewQty.AutoSize = true;
+            this.labelNewQty.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.labelNewQty.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.labelNewQty.Location = new System.Drawing.Point(13, 29);
+            this.labelNewQty.Name = "labelNewQty";
+            this.labelNewQty.Size = new System.Drawing.Size(162, 20);
+            this.labelNewQty.TabIndex = 2;
+            this.labelNewQty.Text = "Nowa całkowita ilość: ";
+            // 
+            // labelBaseQty
+            // 
+            this.labelBaseQty.AutoSize = true;
+            this.labelBaseQty.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.labelBaseQty.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.labelBaseQty.Location = new System.Drawing.Point(54, 6);
+            this.labelBaseQty.Name = "labelBaseQty";
+            this.labelBaseQty.Size = new System.Drawing.Size(121, 20);
+            this.labelBaseQty.TabIndex = 1;
+            this.labelBaseQty.Text = "Całkowita ilość: ";
             // 
             // dataGridView1
             // 
@@ -81,6 +127,7 @@
             this.Column7,
             this.Column2,
             this.ColQty,
+            this.ColNg,
             this.Column4,
             this.Column5,
             this.ColDbId});
@@ -91,51 +138,6 @@
             this.dataGridView1.Size = new System.Drawing.Size(1047, 368);
             this.dataGridView1.TabIndex = 2;
             this.dataGridView1.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellValueChanged);
-            // 
-            // labelOrderNo
-            // 
-            this.labelOrderNo.AutoSize = true;
-            this.labelOrderNo.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.labelOrderNo.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.labelOrderNo.Location = new System.Drawing.Point(12, 9);
-            this.labelOrderNo.Name = "labelOrderNo";
-            this.labelOrderNo.Size = new System.Drawing.Size(164, 20);
-            this.labelOrderNo.TabIndex = 0;
-            this.labelOrderNo.Text = "Wpisy dla zlecenia nr. ";
-            // 
-            // labelBaseQty
-            // 
-            this.labelBaseQty.AutoSize = true;
-            this.labelBaseQty.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.labelBaseQty.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.labelBaseQty.Location = new System.Drawing.Point(54, 6);
-            this.labelBaseQty.Name = "labelBaseQty";
-            this.labelBaseQty.Size = new System.Drawing.Size(121, 20);
-            this.labelBaseQty.TabIndex = 1;
-            this.labelBaseQty.Text = "Całkowita ilość: ";
-            // 
-            // labelNewQty
-            // 
-            this.labelNewQty.AutoSize = true;
-            this.labelNewQty.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.labelNewQty.ForeColor = System.Drawing.SystemColors.ButtonFace;
-            this.labelNewQty.Location = new System.Drawing.Point(13, 29);
-            this.labelNewQty.Name = "labelNewQty";
-            this.labelNewQty.Size = new System.Drawing.Size(162, 20);
-            this.labelNewQty.TabIndex = 2;
-            this.labelNewQty.Text = "Nowa całkowita ilość: ";
-            // 
-            // button1
-            // 
-            this.button1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.button1.Enabled = false;
-            this.button1.Location = new System.Drawing.Point(823, 0);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(224, 59);
-            this.button1.TabIndex = 3;
-            this.button1.Text = "Zapisz zmiany";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // Column1
             // 
@@ -159,6 +161,11 @@
             // 
             this.ColQty.HeaderText = "Ilość";
             this.ColQty.Name = "ColQty";
+            // 
+            // ColNg
+            // 
+            this.ColNg.HeaderText = "Odpad";
+            this.ColNg.Name = "ColNg";
             // 
             // Column4
             // 
@@ -211,6 +218,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column7;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColQty;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColNg;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColDbId;
