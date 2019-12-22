@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CurrentOrder.cs" />
     <Compile Include="Forms\ChangeSMTqty.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -73,6 +74,12 @@
     <Compile Include="Forms\Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\SecondConfirm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SecondConfirm.Designer.cs">
+      <DependentUpon>SecondConfirm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\LoadOrderFromHistory.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -96,6 +103,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\SecondConfirm.resx">
+      <DependentUpon>SecondConfirm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LoadOrderFromHistory.resx">
       <DependentUpon>LoadOrderFromHistory.cs</DependentUpon>
@@ -128,6 +138,10 @@
     <EmbeddedResource Include="Resources\loading bar.gif" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Graffiti.MST\Graffiti.MST\Graffiti.MST.csproj">
+      <Project>{c33f6b02-f8b4-4040-ae28-e30767d8a480}</Project>
+      <Name>Graffiti.MST</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\MST.MES\MST.MES\MST.MES.csproj">
       <Project>{3A75370E-11B7-4582-A6AF-73CAF3A9E997}</Project>
       <Name>MST.MES</Name>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Graffiti.MST;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,13 +13,13 @@ namespace Zużycie_LED_do_zlecenia
 {
     public partial class Details : Form
     {
-        private readonly DataTable sourceTable;
+        private readonly IEnumerable<ComponentsTools.ComponentStruct> inputData;
         List<Color> colorList = new List<Color>();
 
-        public Details(DataTable sourceTable)
+        public Details(IEnumerable<ComponentsTools.ComponentStruct> inputData)
         {
             InitializeComponent();
-            this.sourceTable = sourceTable;
+            this.inputData = inputData.OrderBy(x => x.operationDate);
             colorList.Add(Color.FromArgb(255,255, 215, 119));
                 colorList.Add(Color.FromArgb(255, 17, 215, 54));
             colorList.Add(Color.FromArgb(255, 41, 255, 179));
@@ -35,21 +36,35 @@ namespace Zużycie_LED_do_zlecenia
 
         private void Details_Load(object sender, EventArgs e)
         {
+            DataTable sourceTable = new DataTable();
+            sourceTable.Columns.Add("Data");
+            sourceTable.Columns.Add("Zlecenie");
+            sourceTable.Columns.Add("Ilość");
+            sourceTable.Columns.Add("Zużycie");
+            sourceTable.Columns.Add("Lokalizacja");
+            double previousQty = inputData.First().Quantity;
+            foreach (var record in inputData)
+            {
+                sourceTable.Rows.Add(
+                    record.operationDate,
+                    record.ConnectedToOrder,
+                    record.Quantity,
+                    previousQty - record.Quantity,
+                    record.Location
+                    );
+                previousQty = record.Quantity;
+            }
+
             dataGridView1.DataSource = sourceTable;
 
-            foreach (DataGridViewColumn column in dataGridView1.Columns)
-            {
-                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            }
         }
 
         private void dataGridView1_DataSourceChanged(object sender, EventArgs e)
         {
-            int orderCount = 0;
             List<string> ordersList = new List<string>();
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
-                string order = row.Cells["zlecenieString"].Value.ToString();
+                string order = row.Cells["Zlecenie"].Value.ToString();
                 if (!ordersList.Contains(order)) ordersList.Add(order);
 
                 ColorRow(row, colorList[ordersList.IndexOf(order)]);

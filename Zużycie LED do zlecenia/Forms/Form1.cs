@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Graffiti.MST;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,7 +16,7 @@ namespace Zużycie_LED_do_zlecenia
         public Form1()
         {
             InitializeComponent();
-            backgroundWorker1.DoWork += BackgroundWorker1_DoWork;
+            bwLoadOrder.DoWork += bwLoadOrder_DoWork;
         }
 
         private double ledsUsed = 0;
@@ -36,7 +37,7 @@ namespace Zużycie_LED_do_zlecenia
             if (e.KeyChar == (char)13)
             {
                 pictureBox1.Visible = true;
-                backgroundWorker1.RunWorkerAsync();
+                bwLoadOrder.RunWorkerAsync();
                 ledsUsed = 0;
                 e.Handled = true;
             }
@@ -46,12 +47,14 @@ namespace Zużycie_LED_do_zlecenia
         {
         }
 
-        private Dictionary<string, DataTable> detailedLedInfoDict = new Dictionary<string, DataTable>();
+        private Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>> detailedLedInfoDict = new Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>>();
 
-        private void BackgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        private void bwLoadOrder_DoWork(object sender, DoWorkEventArgs e)
         {
-            detailedLedInfoDict = new Dictionary<string, DataTable>();
+            
+            detailedLedInfoDict = new Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>>();
             string orderNo = textBoxOrderNo.Text.Trim();
+            CurrentOrder.orderNo = orderNo;
             kittingData = MST.MES.SqlDataReaderMethods.Kitting.GetOneOrderByDataReader(orderNo);
             if (kittingData.modelId != null)
             {
@@ -64,10 +67,14 @@ namespace Zużycie_LED_do_zlecenia
                 DataTable result = new DataTable();
                 if (kittingData.orderNo != null)
                 {
-                    DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
-                    backgroundWorker1.ReportProgress(50, 0);
-                    Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = LedTools.FullLedInfo(sqlLedsForOrder);
-                    backgroundWorker1.ReportProgress(80, 0);
+                    //DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
+                    var componentsUsedInOrder = Graffiti.MST.ComponentsTools.GetDbData.GetComponentsUsedInOrder(int.Parse(orderNo));
+                    //var grouppedBy12Nc = componentsUsedInOrder.GroupBy(c => c.Nc12).Select(group => new { Nc12 = group.Key, Items = group.ToList() });
+                    var grouppedBy12NcAndId = componentsUsedInOrder.GroupBy(c => new { c.Nc12, c.Id });
+
+                    bwLoadOrder.ReportProgress(50, 0);
+                    //Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = LedTools.FullLedInfo(sqlLedsForOrder);
+                    bwLoadOrder.ReportProgress(80, 0);
                     result.Columns.Add("12NC");
                     result.Columns.Add("ID");
                     result.Columns.Add("Partia");
@@ -76,46 +83,35 @@ namespace Zużycie_LED_do_zlecenia
 
                     result.Rows.Add("Płyty PCB");
 
-                    foreach (var nc12Entry in detailedLedInfo)
+                    var qroCodesList = grouppedBy12NcAndId.Select(x => $"{x.Key.Nc12}|ID:{x.Key.Id}").ToList();
+                    var detailedLedInfo = Graffiti.MST.ComponentsTools.GetDbData.GetComponentHistoryBatch(qroCodesList);
+
+                    foreach (var comp in grouppedBy12NcAndId)
                     {
-                        if (!nc12Entry.Key.StartsWith("4010560") & !nc12Entry.Key.StartsWith("4010460") & !nc12Entry.Key.StartsWith("4010441") & !nc12Entry.Key.StartsWith("4010440")) continue;
-                        foreach (var idEntry in nc12Entry.Value)
+                        if (!comp.Key.Nc12.StartsWith("4010560") & !comp.Key.Nc12.StartsWith("4010460") & !comp.Key.Nc12.StartsWith("4010441") & !comp.Key.Nc12.StartsWith("4010440")) continue;
+                        var detailesForReel = detailedLedInfo.Where(x => x.Nc12 == comp.Key.Nc12 & x.Id == comp.Key.Id);
+
+                        int quantityUsed = calculateLedUsedInOrder(detailesForReel, orderNo);
+
+                        if (comp.Key.Nc12.StartsWith("4010560") || comp.Key.Nc12.StartsWith("4010460"))
                         {
-                            double totalQty = 0;
-                            string partia = idEntry.Value.Rows[0]["Partia"].ToString();
-                            detailedLedInfoDict.Add(nc12Entry.Key + idEntry.Key, idEntry.Value);
-                            foreach (DataRow row in idEntry.Value.Rows)
-                            {
-                                string zlecenieString = row["ZlecenieString"].ToString();
-                                if (zlecenieString != kittingData.orderNo) continue;
+                            ledsUsed += quantityUsed;
+                            var newRow = result.NewRow();
+                            newRow[0] = comp.Key.Nc12;
+                            newRow[1] = comp.Key.Id;
+                            newRow[2] = comp.First().deliveryDate.ToString("dd-MM-yyyy");
+                            newRow[3] = quantityUsed;
+                            newRow[4] = comp.OrderBy(x => x.operationDate).Last().Quantity;
 
-                                int usedLed = int.Parse(row["zuzycie"].ToString());
-                                totalQty += usedLed;
-                            }
-                            int qty = (int)Double.Parse(idEntry.Value.Rows[idEntry.Value.Rows.Count - 1]["qty"].ToString().ToUpper().Replace(".",","), NumberStyles.Float);
-                            int currentQty = qty;
-
-
-                            
-                            if (nc12Entry.Key.StartsWith("4010560") || nc12Entry.Key.StartsWith("4010460"))
-                            {
-                                ledsUsed += totalQty;
-                                var newRow = result.NewRow();
-                                newRow[0] = nc12Entry.Key;
-                                newRow[1] = idEntry.Key;
-                                newRow[2] = partia;
-                                newRow[3] = totalQty;
-                                newRow[4] = currentQty;
-
-                                result.Rows.InsertAt(newRow, 0);
-                            }
-                            else
-                            {
-                                mbUsed += totalQty;
-                                result.Rows.Add(nc12Entry.Key, idEntry.Key, partia, totalQty, currentQty);
-                            }
-                            
+                            result.Rows.InsertAt(newRow, 0);
                         }
+                        else
+                        {
+                            mbUsed += quantityUsed;
+                            result.Rows.Add(comp.Key.Nc12, comp.Key.Id, comp.First().deliveryDate.ToString("dd-MM-yyyy"), quantityUsed, comp.OrderBy(x => x.operationDate).Last().Quantity);
+                        }
+
+                        detailedLedInfoDict.Add(comp.Key.Nc12 + comp.Key.Id, detailesForReel);
                     }
 
                     var ledDescrRow = result.NewRow();
@@ -126,23 +122,111 @@ namespace Zużycie_LED_do_zlecenia
             }
         }
 
+        private int calculateLedUsedInOrder(IEnumerable<ComponentsTools.ComponentStruct> detailesForReel, string orderNo)
+        {
+            int result = 0;
+            int prevQty = -1;
+            var sortedByDate = detailesForReel.OrderBy(x => x.operationDate);
+            foreach (var operation in sortedByDate)
+            {
+                if(operation.ConnectedToOrder.ToString() != orderNo)
+                {
+                    prevQty = -1;
+                    continue;
+                }
+
+                if(prevQty == -1)
+                {
+                    prevQty = (int)operation.Quantity;
+                    continue;
+                }
+
+                result += prevQty - (int)operation.Quantity;
+            }
+
+            return result;
+        }
+
         private void buttonEndOrder_Click(object sender, EventArgs e)
         {
-            if (userList.Contains(currentUser))
-            {
-                DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie." + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
-                if (dialogResult == DialogResult.Yes)
-                {
-                    MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
-                    MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
-
-                    labelStatus.Text = $"Status: zlecenie zakończone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
-                    buttonEndOrder.Visible = false;
-                }
-            }
-            else
+            if (!userList.Contains(currentUser))
             {
                 MessageBox.Show("Brak uprawnień");
+            }
+
+            if(kittingData.ordertatus == MST.MES.OrderStatus.Status.ReadyToShip)
+            {
+                //Ng waiting for repair - partial confirm
+                if (CurrentOrder.VisualInspection.WaitingForRepair > 0)
+                {
+                    PartialConfirm();
+                }
+                else
+                {
+                    FullConfirm();
+                    
+                }
+            }
+
+            if(kittingData.ordertatus == MST.MES.OrderStatus.Status.ShippedNgNotDone)
+            {
+                SecondConfirm();
+            }
+        }
+
+        private void FullConfirm()
+        {
+            DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie."
+                + Environment.NewLine + $"Potwierdzonych zostanie: {boxingData.Count} wyrobu dobrego oraz {viData.scrapCount} scrap"
+                + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo) ;
+
+            if (dialogResult == DialogResult.Yes)
+            {
+                MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
+                MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
+                MST.MES.OrderStatus.ChangeOrderStatus(kittingData.orderNo, MST.MES.OrderStatus.Status.Finished);
+
+                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(kittingData.orderNo), boxingData.Count, viData.scrapCount);
+                labelStatus.Text = $"Status: zlecenie zakończone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
+                buttonEndOrder.Visible = false;
+            }
+        }
+        private void PartialConfirm()
+        {
+            DialogResult partialConfirmDialog = MessageBox.Show($"Na naprawę wiąż oczekuje {CurrentOrder.VisualInspection.WaitingForRepair} NG. Możliwe jest częściowe przesunięcie."
+                        + Environment.NewLine + "Po naprawie konieczne będzie końcowe rozliczenie naprawionych wyrobów"
+                        + Environment.NewLine + $"Potwierdzonych zostanie: {boxingData.Count} wyrobu dobrego oraz {viData.scrapCount} scrap"
+                        + Environment.NewLine + Environment.NewLine + "Czy chcesz częściowo przesunąć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
+
+            if (partialConfirmDialog == DialogResult.Yes)
+            {
+                MST.MES.SqlOperations.Kitting.FinishOrder(
+                    CurrentOrder.orderNo,
+                    boxingData.Count,
+                    CurrentOrder.VisualInspection.WaitingForRepair,
+                    viData.scrapCount,
+                    MST.MES.OrderStatus.Status.ShippedNgNotDone);
+
+                MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
+
+                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(kittingData.orderNo), boxingData.Count, viData.scrapCount);
+                labelStatus.Text = $"Status: zlecenie częściowo potwierdzone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
+                buttonEndOrder.Visible = true;
+            }
+        }
+        private void SecondConfirm()
+        {
+            using (SecondConfirm confForm = new Forms.SecondConfirm((int)kittingData.confirmedNgQty))
+            {
+                if(confForm.ShowDialog() == DialogResult.OK)
+                {
+                    MST.MES.SqlOperations.Kitting.FinishOrder(
+                        CurrentOrder.orderNo, 
+                        (int)kittingData.confirmedGoodQty + confForm.goodQty, 
+                        0, 
+                        (int)kittingData.confirmedScrQty + confForm.scrQty, 
+                        MST.MES.OrderStatus.Status.Finished);
+                }
             }
         }
 
@@ -168,21 +252,7 @@ namespace Zużycie_LED_do_zlecenia
                 dataGridView1.DataSource = sourceTable;
                 dataGridView1.Columns["butCol"].DisplayIndex = dataGridView1.Columns.Count - 1;
 
-                foreach (DataGridViewColumn column in dataGridView1.Columns)
-                {
-                    column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-                }
-
-                if (kittingData.endDate < DateTime.Now.AddYears(-50))
-                {
-                    labelStatus.Text = $"Status: zlecenie nie jest zakończone!";
-                    buttonEndOrder.Visible = true;
-                }
-                else
-                {
-                    labelStatus.Text = $"Status: zlecenie zakończone: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}";
-                    buttonEndOrder.Visible = false;
-                }
+                
 
                 labelOrderInfo.Text =
                     $"Data utworzenia zlecenia: {kittingData.kittingDate.ToShortDateString()}" +
@@ -226,11 +296,11 @@ namespace Zużycie_LED_do_zlecenia
                 labelNg.Text = $"NG: {realNg} szt.";
                 if (viData.ngCount > 0)
                 {
-                    int waitingForRepair = viData.ngScrapList.Where(r => !r.reworkOK.HasValue & r.viInspectionResult == "NG").Count();
+                    CurrentOrder.VisualInspection.WaitingForRepair = viData.ngScrapList.Where(r => !r.reworkOK.HasValue & r.viInspectionResult == "NG").Count();
                     string textForRepair = "";
-                    if (waitingForRepair > 0)
+                    if (CurrentOrder.VisualInspection.WaitingForRepair > 0)
                     {
-                        textForRepair = $", oczekujących na naprawę: {waitingForRepair}szt.";
+                        textForRepair = $", oczekujących na naprawę: {CurrentOrder.VisualInspection.WaitingForRepair}szt.";
                     }
                     labelNg.Text += $" (naprawionych {viData.reworkedOkCout}szt.{textForRepair})";
                 }
@@ -238,6 +308,28 @@ namespace Zużycie_LED_do_zlecenia
                 if (viData.reworkFailedCout > 0)
                 {
                     labelScrap.Text += $" (w tym {viData.reworkFailedCout}szt. - nieudana naprawa)";
+                }
+
+                if ((int)kittingData.ordertatus < 4)
+                {
+                    labelStatus.Text = $"Status: zlecenie nie jest zakończone!";
+                    buttonEndOrder.Visible = true;
+                }
+                else
+                {
+                    if (kittingData.ordertatus == MST.MES.OrderStatus.Status.Finished)
+                    {
+                        labelStatus.Text = $"Status: zlecenie zakończone: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}"
+                            + Environment.NewLine + $"Przesunięto: {kittingData.confirmedGoodQty} wyr. dobrego, {kittingData.confirmedScrQty} scrap";
+                        buttonEndOrder.Visible = false;
+                    }
+                    else
+                    {
+                        labelStatus.Text = $"Status: zlecenie częściowo przesunięte: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}" +
+                            Environment.NewLine + $"Przesunięto: {kittingData.confirmedGoodQty} wyr. dobrego, {kittingData.confirmedScrQty} scrap" +
+                            Environment.NewLine + $"Oczekujące na naprawę: {kittingData.confirmedNgQty} NG";
+                        buttonEndOrder.Visible = true;
+                    }
                 }
             }
         }
@@ -292,7 +384,7 @@ namespace Zużycie_LED_do_zlecenia
         {
             pictureBox1.Visible = true;
             textBoxOrderNo.Text = kittingData.orderNo;
-            backgroundWorker1.RunWorkerAsync();
+            bwLoadOrder.RunWorkerAsync();
             ledsUsed = 0;
         }
 
@@ -322,7 +414,7 @@ namespace Zużycie_LED_do_zlecenia
                 {
                     textBoxOrderNo.Text = historyForm.selectedOrderNumber;
                     pictureBox1.Visible = true;
-                    backgroundWorker1.RunWorkerAsync();
+                    bwLoadOrder.RunWorkerAsync();
                     ledsUsed = 0;
                 }
             }
