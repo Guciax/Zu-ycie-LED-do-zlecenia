@@ -86,8 +86,10 @@
     <Compile Include="Forms\LoadOrderFromHistory.Designer.cs">
       <DependentUpon>LoadOrderFromHistory.cs</DependentUpon>
     </Compile>
+    <Compile Include="GraffitiComponents.cs" />
     <Compile Include="LedInfoStructure.cs" />
     <Compile Include="LedTools.cs" />
+    <Compile Include="MesDataStorage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlTools.cs" />

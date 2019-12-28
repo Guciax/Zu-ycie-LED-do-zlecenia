@@ -22,12 +22,6 @@ namespace Zużycie_LED_do_zlecenia
         private double ledsUsed = 0;
         private double mbUsed = 0;
         private DataTable sourceTable = new DataTable();
-        private MST.MES.OrderStructureByOrderNo.Kitting kittingData = new MST.MES.OrderStructureByOrderNo.Kitting();
-        private MST.MES.OrderStructureByOrderNo.SMT smtData = new MST.MES.OrderStructureByOrderNo.SMT();
-        private MST.MES.ModelInfo.ModelSpecification modelSpec = new MST.MES.ModelInfo.ModelSpecification();
-        private MST.MES.OrderStructureByOrderNo.TestInfo testData = new MST.MES.OrderStructureByOrderNo.TestInfo();
-        private MST.MES.OrderStructureByOrderNo.VisualInspection viData = new MST.MES.OrderStructureByOrderNo.VisualInspection();
-        private List<MST.MES.OrderStructureByOrderNo.BoxingInfo> boxingData = new List<MST.MES.OrderStructureByOrderNo.BoxingInfo>();
 
         private string[] userList = new string[] { "piotr.dabrowski", "wojciech.komor", "katarzyna.kustra", "tomasz.jurkin", "grazyna.fabisiak", "mariola.czernis" };
         private string currentUser = Environment.UserName;
@@ -49,26 +43,20 @@ namespace Zużycie_LED_do_zlecenia
 
         private Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>> detailedLedInfoDict = new Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>>();
 
-        private void bwLoadOrder_DoWork(object sender, DoWorkEventArgs e)
+        private async void bwLoadOrder_DoWork(object sender, DoWorkEventArgs e)
         {
-            
             detailedLedInfoDict = new Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>>();
             string orderNo = textBoxOrderNo.Text.Trim();
             CurrentOrder.orderNo = orderNo;
-            kittingData = MST.MES.SqlDataReaderMethods.Kitting.GetOneOrderByDataReader(orderNo);
-            if (kittingData.modelId != null)
-            {
-                smtData = MST.MES.SqlDataReaderMethods.SMT.GetOneOrder(orderNo);
-                modelSpec = MST.MES.SqlDataReaderMethods.MesModels.mesModel(kittingData.modelId);
-                viData = MST.MES.SqlDataReaderMethods.VisualInspection.GetViForOneOrder(orderNo);
-                //testData = MST.MES.SqlDataReaderMethods.LedTest.GetTestRecordsForOneOrder(MST.MES.SqlDataReaderMethods.LedTest.TesterIdToName(), orderNo, -1);
-                boxingData = MST.MES.SqlDataReaderMethods.Boxing.GetBoxingForOneOrder(kittingData.orderNo);
+            await MesDataStorage.LoadMesDataAsync(orderNo);
 
+            if (MesDataStorage.kittingData.modelId != null)
+            {
                 DataTable result = new DataTable();
-                if (kittingData.orderNo != null)
+                if (MesDataStorage.kittingData.orderNo != null)
                 {
                     //DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
-                    var componentsUsedInOrder = Graffiti.MST.ComponentsTools.GetDbData.GetComponentsUsedInOrder(int.Parse(orderNo));
+                    var componentsUsedInOrder = GraffitiComponents.allComponents.Where(c => c.ConnectedToOrder.ToString() == orderNo);
                     //var grouppedBy12Nc = componentsUsedInOrder.GroupBy(c => c.Nc12).Select(group => new { Nc12 = group.Key, Items = group.ToList() });
                     var grouppedBy12NcAndId = componentsUsedInOrder.GroupBy(c => new { c.Nc12, c.Id });
 
@@ -154,7 +142,7 @@ namespace Zużycie_LED_do_zlecenia
                 MessageBox.Show("Brak uprawnień");
             }
 
-            if(kittingData.ordertatus == MST.MES.OrderStatus.Status.ReadyToShip)
+            if(MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.ReadyToShip)
             {
                 //Ng waiting for repair - partial confirm
                 if (CurrentOrder.VisualInspection.WaitingForRepair > 0)
@@ -168,7 +156,7 @@ namespace Zużycie_LED_do_zlecenia
                 }
             }
 
-            if(kittingData.ordertatus == MST.MES.OrderStatus.Status.ShippedNgNotDone)
+            if(MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.ShippedNgNotDone)
             {
                 SecondConfirm();
             }
@@ -177,16 +165,16 @@ namespace Zużycie_LED_do_zlecenia
         private void FullConfirm()
         {
             DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie."
-                + Environment.NewLine + $"Potwierdzonych zostanie: {boxingData.Count} wyrobu dobrego oraz {viData.scrapCount} scrap"
+                + Environment.NewLine + $"Potwierdzonych zostanie: {MesDataStorage.boxingData.Count} wyrobu dobrego oraz {MesDataStorage.viData.scrapCount} scrap"
                 + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo) ;
 
             if (dialogResult == DialogResult.Yes)
             {
                 MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
                 MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
-                MST.MES.OrderStatus.ChangeOrderStatus(kittingData.orderNo, MST.MES.OrderStatus.Status.Finished);
+                MST.MES.OrderStatus.ChangeOrderStatus(MesDataStorage.kittingData.orderNo, MST.MES.OrderStatus.Status.Finished);
 
-                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(kittingData.orderNo), boxingData.Count, viData.scrapCount);
+                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(MesDataStorage.kittingData.orderNo), MesDataStorage.boxingData.Count, MesDataStorage.viData.scrapCount);
                 labelStatus.Text = $"Status: zlecenie zakończone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
                 buttonEndOrder.Visible = false;
             }
@@ -195,36 +183,36 @@ namespace Zużycie_LED_do_zlecenia
         {
             DialogResult partialConfirmDialog = MessageBox.Show($"Na naprawę wiąż oczekuje {CurrentOrder.VisualInspection.WaitingForRepair} NG. Możliwe jest częściowe przesunięcie."
                         + Environment.NewLine + "Po naprawie konieczne będzie końcowe rozliczenie naprawionych wyrobów"
-                        + Environment.NewLine + $"Potwierdzonych zostanie: {boxingData.Count} wyrobu dobrego oraz {viData.scrapCount} scrap"
+                        + Environment.NewLine + $"Potwierdzonych zostanie: {MesDataStorage.boxingData.Count} wyrobu dobrego oraz {MesDataStorage.viData.scrapCount} scrap"
                         + Environment.NewLine + Environment.NewLine + "Czy chcesz częściowo przesunąć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
 
             if (partialConfirmDialog == DialogResult.Yes)
             {
                 MST.MES.SqlOperations.Kitting.FinishOrder(
                     CurrentOrder.orderNo,
-                    boxingData.Count,
+                    MesDataStorage.boxingData.Count,
                     CurrentOrder.VisualInspection.WaitingForRepair,
-                    viData.scrapCount,
+                    MesDataStorage.viData.scrapCount,
                     MST.MES.OrderStatus.Status.ShippedNgNotDone);
 
                 MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
 
-                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(kittingData.orderNo), boxingData.Count, viData.scrapCount);
+                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(MesDataStorage.kittingData.orderNo), MesDataStorage.boxingData.Count, MesDataStorage.viData.scrapCount);
                 labelStatus.Text = $"Status: zlecenie częściowo potwierdzone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
                 buttonEndOrder.Visible = true;
             }
         }
         private void SecondConfirm()
         {
-            using (SecondConfirm confForm = new Forms.SecondConfirm((int)kittingData.confirmedNgQty))
+            using (SecondConfirm confForm = new Forms.SecondConfirm((int)MesDataStorage.kittingData.confirmedNgQty))
             {
                 if(confForm.ShowDialog() == DialogResult.OK)
                 {
                     MST.MES.SqlOperations.Kitting.FinishOrder(
                         CurrentOrder.orderNo, 
-                        (int)kittingData.confirmedGoodQty + confForm.goodQty, 
+                        (int)MesDataStorage.kittingData.confirmedGoodQty + confForm.goodQty, 
                         0, 
-                        (int)kittingData.confirmedScrQty + confForm.scrQty, 
+                        (int)MesDataStorage.kittingData.confirmedScrQty + confForm.scrQty, 
                         MST.MES.OrderStatus.Status.Finished);
                 }
             }
@@ -247,43 +235,41 @@ namespace Zużycie_LED_do_zlecenia
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (kittingData.modelId != null)
+            if (MesDataStorage.kittingData.modelId != null)
             {
                 dataGridView1.DataSource = sourceTable;
                 dataGridView1.Columns["butCol"].DisplayIndex = dataGridView1.Columns.Count - 1;
 
-                
-
                 labelOrderInfo.Text =
-                    $"Data utworzenia zlecenia: {kittingData.kittingDate.ToShortDateString()}" +
-                    Environment.NewLine + $"Ilość zamówienia: {kittingData.orderedQty} szt.";
+                    $"Data utworzenia zlecenia: {MesDataStorage.kittingData.kittingDate.ToShortDateString()}" +
+                    Environment.NewLine + $"Ilość zamówienia: {MesDataStorage.kittingData.orderedQty} szt.";
 
-                labelModelInfo.Text = modelSpec.modelName + Environment.NewLine
-                    + kittingData.modelId.Insert(4, " ").Insert(8, " ") + Environment.NewLine
-                    + $"Ilość PCB/MB: {modelSpec.pcbCountPerMB + Environment.NewLine}"
-                    + $"Ilość LED: {modelSpec.ledCountPerModel + Environment.NewLine}"
-                    + $"Ilość Res: {modelSpec.resistorCountPerModel + Environment.NewLine}"
-                    + $"Ilość Conn: {modelSpec.connectorCountPerModel + Environment.NewLine}";
+                labelModelInfo.Text = MesDataStorage.kittingData.modelSpec.modelName + Environment.NewLine
+                    + MesDataStorage.kittingData.modelId.Insert(4, " ").Insert(8, " ") + Environment.NewLine
+                    + $"Ilość PCB/MB: {MesDataStorage.kittingData.modelSpec.pcbCountPerMB + Environment.NewLine}"
+                    + $"Ilość LED: {MesDataStorage.kittingData.modelSpec.ledCountPerModel + Environment.NewLine}"
+                    + $"Ilość Res: {MesDataStorage.kittingData.modelSpec.resistorCountPerModel + Environment.NewLine}"
+                    + $"Ilość Conn: {MesDataStorage.kittingData.modelSpec.connectorCountPerModel + Environment.NewLine}";
 
                 var nfi = (NumberFormatInfo)CultureInfo.InvariantCulture.NumberFormat.Clone();
                 nfi.NumberGroupSeparator = " ";
-                var theorUsage = (smtData.totalManufacturedQty + smtData.totalNg) * modelSpec.ledCountPerModel;
-                labelTeorUsage.Text = $"Teoretyczne zużycie LED: {smtData.totalManufacturedQty + smtData.totalNg}szt. PCB x {modelSpec.ledCountPerModel}LED = {(theorUsage).ToString("#,0", nfi)}";
+                var theorUsage = (MesDataStorage.smtData.totalManufacturedQty + MesDataStorage.smtData.totalNg) * MesDataStorage.kittingData.modelSpec.ledCountPerModel;
+                labelTeorUsage.Text = $"Teoretyczne zużycie LED: {MesDataStorage.smtData.totalManufacturedQty + MesDataStorage.smtData.totalNg}szt. PCB x {MesDataStorage.kittingData.modelSpec.ledCountPerModel}LED = {(theorUsage).ToString("#,0", nfi)}";
                 var waste = ((ledsUsed - theorUsage) / theorUsage * 100).ToString("F2");
                 labelRealUsage.Text = $"Rzeczywiste zużycie LED: {ledsUsed.ToString("#,0", nfi)}   =>   {waste}%";
                 lMbUsage.Text = $"Zużycie MB: {mbUsed}szt.";
-                lPcbUsage.Text = $"Zużycie PCB: {mbUsed* modelSpec.pcbCountPerMB}szt.";
+                lPcbUsage.Text = $"Zużycie PCB: {mbUsed* MesDataStorage.kittingData.modelSpec.pcbCountPerMB}szt.";
                 pictureBox1.Visible = false;
 
-                labelProductionInfo.Text = $"Ilość po SMT: {smtData.totalManufacturedQty} szt." + Environment.NewLine;
-                lSmtNg.Text = $"Odpad: {smtData.totalNg} szt.";
-                labelSmtDate.Text = $"Produkcja  od: {smtData.earliestStart.ToString("HH:mm dd-MM-yyyy")} do: {smtData.latestEnd.ToString("HH:mm dd-MM-yyyy")}";
-                labelSmtLines.Text = "Linia SMT: " + string.Join(", ", smtData.smtLinesInvolved);
+                labelProductionInfo.Text = $"Ilość po SMT: {MesDataStorage.smtData.totalManufacturedQty} szt." + Environment.NewLine;
+                lSmtNg.Text = $"Odpad: {MesDataStorage.smtData.totalNg} szt.";
+                labelSmtDate.Text = $"Produkcja  od: {MesDataStorage.smtData.earliestStart.ToString("HH:mm dd-MM-yyyy")} do: {MesDataStorage.smtData.latestEnd.ToString("HH:mm dd-MM-yyyy")}";
+                labelSmtLines.Text = "Linia SMT: " + string.Join(", ", MesDataStorage.smtData.smtLinesInvolved);
 
-                labelPackedQty.Text = $"Spakowanych wyrobów: {boxingData.Count().ToString()} szt.";
-                labelBoxesCount.Text = $"Ilość kartonów: {boxingData.Select(m => m.boxId).Distinct().Count()} szt.";
+                labelPackedQty.Text = $"Spakowanych wyrobów: {MesDataStorage.boxingData.Count().ToString()} szt.";
+                labelBoxesCount.Text = $"Ilość kartonów: {MesDataStorage.boxingData.Select(m => m.boxId).Distinct().Count()} szt.";
 
-                if (smtData.totalManufacturedQty > 0)
+                if (MesDataStorage.smtData.totalManufacturedQty > 0)
                 {
                     buttonChangeSmtQty.Enabled = true;
                 }
@@ -292,42 +278,42 @@ namespace Zużycie_LED_do_zlecenia
                     buttonChangeSmtQty.Enabled = false;
                 }
 
-                int realNg = viData.ngCount;
+                int realNg = MesDataStorage.viData.ngCount;
                 labelNg.Text = $"NG: {realNg} szt.";
-                if (viData.ngCount > 0)
+                if (MesDataStorage.viData.ngCount > 0)
                 {
-                    CurrentOrder.VisualInspection.WaitingForRepair = viData.ngScrapList.Where(r => !r.reworkOK.HasValue & r.viInspectionResult == "NG").Count();
+                    CurrentOrder.VisualInspection.WaitingForRepair = MesDataStorage.viData.ngScrapList.Where(r => !r.reworkOK.HasValue & r.viInspectionResult == "NG").Count();
                     string textForRepair = "";
                     if (CurrentOrder.VisualInspection.WaitingForRepair > 0)
                     {
                         textForRepair = $", oczekujących na naprawę: {CurrentOrder.VisualInspection.WaitingForRepair}szt.";
                     }
-                    labelNg.Text += $" (naprawionych {viData.reworkedOkCout}szt.{textForRepair})";
+                    labelNg.Text += $" (naprawionych {MesDataStorage.viData.reworkedOkCout}szt.{textForRepair})";
                 }
-                labelScrap.Text = $"SCRAP: {viData.scrapCount} szt.";
-                if (viData.reworkFailedCout > 0)
+                labelScrap.Text = $"SCRAP: {MesDataStorage.viData.scrapCount} szt.";
+                if (MesDataStorage.viData.reworkFailedCout > 0)
                 {
-                    labelScrap.Text += $" (w tym {viData.reworkFailedCout}szt. - nieudana naprawa)";
+                    labelScrap.Text += $" (w tym {MesDataStorage.viData.reworkFailedCout}szt. - nieudana naprawa)";
                 }
 
-                if ((int)kittingData.ordertatus < 4)
+                if ((int)MesDataStorage.kittingData.ordertatus < 4)
                 {
                     labelStatus.Text = $"Status: zlecenie nie jest zakończone!";
                     buttonEndOrder.Visible = true;
                 }
                 else
                 {
-                    if (kittingData.ordertatus == MST.MES.OrderStatus.Status.Finished)
+                    if (MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.Finished)
                     {
-                        labelStatus.Text = $"Status: zlecenie zakończone: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}"
-                            + Environment.NewLine + $"Przesunięto: {kittingData.confirmedGoodQty} wyr. dobrego, {kittingData.confirmedScrQty} scrap";
+                        labelStatus.Text = $"Status: zlecenie zakończone: {MesDataStorage.kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}"
+                            + Environment.NewLine + $"Przesunięto: {MesDataStorage.kittingData.confirmedGoodQty} wyr. dobrego, {MesDataStorage.kittingData.confirmedScrQty} scrap";
                         buttonEndOrder.Visible = false;
                     }
                     else
                     {
-                        labelStatus.Text = $"Status: zlecenie częściowo przesunięte: {kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}" +
-                            Environment.NewLine + $"Przesunięto: {kittingData.confirmedGoodQty} wyr. dobrego, {kittingData.confirmedScrQty} scrap" +
-                            Environment.NewLine + $"Oczekujące na naprawę: {kittingData.confirmedNgQty} NG";
+                        labelStatus.Text = $"Status: zlecenie częściowo przesunięte: {MesDataStorage.kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}" +
+                            Environment.NewLine + $"Przesunięto: {MesDataStorage.kittingData.confirmedGoodQty} wyr. dobrego, {MesDataStorage.kittingData.confirmedScrQty} scrap" +
+                            Environment.NewLine + $"Oczekujące na naprawę: {MesDataStorage.kittingData.confirmedNgQty} NG";
                         buttonEndOrder.Visible = true;
                     }
                 }
@@ -363,7 +349,7 @@ namespace Zużycie_LED_do_zlecenia
                         string id = dataGridView1.Rows[e.RowIndex].Cells["ID"].Value.ToString();
                         if (nc12 != "" & id != "") 
                         {
-                            using (EditLedQty editForm = new EditLedQty(nc12, id, kittingData.orderNo))
+                            using (EditLedQty editForm = new EditLedQty(nc12, id, MesDataStorage.kittingData.orderNo))
                             {
                                 if (editForm.ShowDialog() == DialogResult.OK)
                                 {
@@ -383,7 +369,7 @@ namespace Zużycie_LED_do_zlecenia
         private void ReloadCurrentOrder()
         {
             pictureBox1.Visible = true;
-            textBoxOrderNo.Text = kittingData.orderNo;
+            textBoxOrderNo.Text = MesDataStorage.kittingData.orderNo;
             bwLoadOrder.RunWorkerAsync();
             ledsUsed = 0;
         }
@@ -392,7 +378,7 @@ namespace Zużycie_LED_do_zlecenia
         {
             if (userList.Contains(currentUser))
             {
-                using (ChangeSMTqty changeForm = new ChangeSMTqty(smtData.smtOrders))
+                using (ChangeSMTqty changeForm = new ChangeSMTqty(MesDataStorage.smtData.smtOrders))
                 {
                     if (changeForm.ShowDialog() == DialogResult.OK)
                     {
