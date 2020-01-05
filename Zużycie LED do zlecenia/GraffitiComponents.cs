@@ -9,13 +9,14 @@ namespace Zużycie_LED_do_zlecenia
 {
     public class GraffitiComponents
     {
-        public static IEnumerable<ComponentStruct> allComponents;
+        public static List<ComponentStruct> allComponents;
+        public static List<ComponentStruct> componentsWithHistory;
 
         public static void LoadComponents()
         {
-            var locations = Graffiti.MST.ComponentsTools.GetDbData.GetComponentsInLocations("EL2.");
-            var componentsList = locations.SelectMany(x => x.Value).Where(x => x.StartsWith("4010460") || x.StartsWith("4010560")).ToList();
-            allComponents = Graffiti.MST.ComponentsTools.GetDbData.GetComponentDataWithAttributes(componentsList);
+            allComponents = Graffiti.MST.OrdersOperations.GetData.GetComponnetsConnectedToOrder(MesDataStorage.kittingData.GraffitiOrderNo.PrimaryKey_00).ToList();
+            var qrCodes = allComponents.Select(c => c.QrCode).ToArray();
+            componentsWithHistory = Graffiti.MST.ComponentsTools.GetDbData.GetComponentHistoryBatch(qrCodes).ToList();
         }
     }
 }

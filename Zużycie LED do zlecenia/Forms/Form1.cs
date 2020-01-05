@@ -16,7 +16,7 @@ namespace Zużycie_LED_do_zlecenia
         public Form1()
         {
             InitializeComponent();
-            bwLoadOrder.DoWork += bwLoadOrder_DoWork;
+            //bwLoadOrder.DoWork += bwLoadOrder_DoWork;
         }
 
         private double ledsUsed = 0;
@@ -43,6 +43,7 @@ namespace Zużycie_LED_do_zlecenia
 
         private Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>> detailedLedInfoDict = new Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>>();
 
+        //off
         private async void bwLoadOrder_DoWork(object sender, DoWorkEventArgs e)
         {
             detailedLedInfoDict = new Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>>();
@@ -55,14 +56,15 @@ namespace Zużycie_LED_do_zlecenia
                 DataTable result = new DataTable();
                 if (MesDataStorage.kittingData.orderNo != null)
                 {
+                    GraffitiComponents.LoadComponents();
                     //DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
-                    var componentsUsedInOrder = GraffitiComponents.allComponents.Where(c => c.ConnectedToOrder.ToString() == orderNo);
+                    var componentsUsedInOrder = GraffitiComponents.allComponents;
                     //var grouppedBy12Nc = componentsUsedInOrder.GroupBy(c => c.Nc12).Select(group => new { Nc12 = group.Key, Items = group.ToList() });
-                    var grouppedBy12NcAndId = componentsUsedInOrder.GroupBy(c => new { c.Nc12, c.Id });
+                    var grouppedBy12NcAndId = componentsUsedInOrder.GroupBy(c => new { c.Nc1_Rank, c.Id });
 
-                    bwLoadOrder.ReportProgress(50, 0);
+                    //bwLoadOrder.ReportProgress(50, 0);
                     //Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = LedTools.FullLedInfo(sqlLedsForOrder);
-                    bwLoadOrder.ReportProgress(80, 0);
+                    //bwLoadOrder.ReportProgress(80, 0);
                     result.Columns.Add("12NC");
                     result.Columns.Add("ID");
                     result.Columns.Add("Partia");
@@ -71,21 +73,21 @@ namespace Zużycie_LED_do_zlecenia
 
                     result.Rows.Add("Płyty PCB");
 
-                    var qroCodesList = grouppedBy12NcAndId.Select(x => $"{x.Key.Nc12}|ID:{x.Key.Id}").ToList();
-                    var detailedLedInfo = Graffiti.MST.ComponentsTools.GetDbData.GetComponentHistoryBatch(qroCodesList);
+
+                    var detailedLedInfo = GraffitiComponents.componentsWithHistory;
 
                     foreach (var comp in grouppedBy12NcAndId)
                     {
-                        if (!comp.Key.Nc12.StartsWith("4010560") & !comp.Key.Nc12.StartsWith("4010460") & !comp.Key.Nc12.StartsWith("4010441") & !comp.Key.Nc12.StartsWith("4010440")) continue;
-                        var detailesForReel = detailedLedInfo.Where(x => x.Nc12 == comp.Key.Nc12 & x.Id == comp.Key.Id);
+                        if (!comp.Key.Nc1_Rank.StartsWith("4010560") & !comp.Key.Nc1_Rank.StartsWith("4010460") & !comp.Key.Nc1_Rank.StartsWith("4010441") & !comp.Key.Nc1_Rank.StartsWith("4010440")) continue;
+                        var detailesForReel = detailedLedInfo.Where(x => x.Nc1_Rank == comp.Key.Nc1_Rank & x.Id == comp.Key.Id);
 
                         int quantityUsed = calculateLedUsedInOrder(detailesForReel, orderNo);
 
-                        if (comp.Key.Nc12.StartsWith("4010560") || comp.Key.Nc12.StartsWith("4010460"))
+                        if (comp.Key.Nc1_Rank.StartsWith("4010560") || comp.Key.Nc1_Rank.StartsWith("4010460"))
                         {
                             ledsUsed += quantityUsed;
                             var newRow = result.NewRow();
-                            newRow[0] = comp.Key.Nc12;
+                            newRow[0] = comp.Key.Nc1_Rank;
                             newRow[1] = comp.Key.Id;
                             newRow[2] = comp.First().deliveryDate.ToString("dd-MM-yyyy");
                             newRow[3] = quantityUsed;
@@ -96,10 +98,10 @@ namespace Zużycie_LED_do_zlecenia
                         else
                         {
                             mbUsed += quantityUsed;
-                            result.Rows.Add(comp.Key.Nc12, comp.Key.Id, comp.First().deliveryDate.ToString("dd-MM-yyyy"), quantityUsed, comp.OrderBy(x => x.operationDate).Last().Quantity);
+                            result.Rows.Add(comp.Key.Nc1_Rank, comp.Key.Id, comp.First().deliveryDate.ToString("dd-MM-yyyy"), quantityUsed, comp.OrderBy(x => x.operationDate).Last().Quantity);
                         }
 
-                        detailedLedInfoDict.Add(comp.Key.Nc12 + comp.Key.Id, detailesForReel);
+                        detailedLedInfoDict.Add(comp.Key.Nc1_Rank + comp.Key.Id, detailesForReel);
                     }
 
                     var ledDescrRow = result.NewRow();
@@ -108,6 +110,7 @@ namespace Zużycie_LED_do_zlecenia
                 }
                 sourceTable = result;
             }
+            ;
         }
 
         private int calculateLedUsedInOrder(IEnumerable<ComponentsTools.ComponentStruct> detailesForReel, string orderNo)
@@ -141,66 +144,81 @@ namespace Zużycie_LED_do_zlecenia
             {
                 MessageBox.Show("Brak uprawnień");
             }
-
-            if(MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.ReadyToShip)
-            {
-                //Ng waiting for repair - partial confirm
-                if (CurrentOrder.VisualInspection.WaitingForRepair > 0)
-                {
-                    PartialConfirm();
-                }
-                else
-                {
-                    FullConfirm();
+            ConfirmOrder();
+            //if (MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.ReadyToShip)
+            //{
+            //    //Ng waiting for repair - partial confirm
+            //    if (CurrentOrder.VisualInspection.WaitingForRepair > 0)
+            //    {
+            //        PartialConfirm();
+            //    }
+            //    else
+            //    {
+            //        FullConfirm();
                     
-                }
-            }
+            //    }
+            //}
 
-            if(MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.ShippedNgNotDone)
+            //if(MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.ShippedNgNotDone)
+            //{
+            //    SecondConfirm();
+            //}
+        }
+
+        private void ConfirmOrder()
+        {
+            MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
+            MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
+            MST.MES.OrderStatus.Status sts = MST.MES.OrderStatus.Status.SmtFinished;
+            if (CurrentOrder.VisualInspection.WaitingForRepair > 0)
             {
-                SecondConfirm();
+                sts = MST.MES.OrderStatus.Status.ShippedNgNotDone;
             }
+            double goodQty = MesDataStorage.boxingData.Count;
+            double ngQty = CurrentOrder.VisualInspection.WaitingForRepair;
+            double scrapQty = MesDataStorage.viData.scrapCount;
+            MST.MES.OrderStatus.ChangeOrderQtyAndStatus(MesDataStorage.kittingData.orderNo, sts, goodQty, ngQty, scrapQty);
         }
 
         private void FullConfirm()
         {
-            DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie."
-                + Environment.NewLine + $"Potwierdzonych zostanie: {MesDataStorage.boxingData.Count} wyrobu dobrego oraz {MesDataStorage.viData.scrapCount} scrap"
-                + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo) ;
+            //DialogResult dialogResult = MessageBox.Show("Możesz zakończyć zlecenie, jeżeli masz pewność, że wszystkie końcowki LED pozostałe po tym zleceniu zostały policzone i zaktualizowane w systemie."
+            //    + Environment.NewLine + $"Potwierdzonych zostanie: {MesDataStorage.boxingData.Count} wyrobu dobrego oraz {MesDataStorage.viData.scrapCount} scrap"
+            //    + Environment.NewLine + Environment.NewLine + "Czy chcesz zakończyć zlecenie?", "UWAGA", MessageBoxButtons.YesNo) ;
 
-            if (dialogResult == DialogResult.Yes)
-            {
-                MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
-                MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
-                MST.MES.OrderStatus.ChangeOrderStatus(MesDataStorage.kittingData.orderNo, MST.MES.OrderStatus.Status.Finished);
+            //if (dialogResult == DialogResult.Yes)
+            //{
+            //    MST.MES.SqlOperations.Kitting.UpdateOrderEndDate(textBoxOrderNo.Text, DateTime.Now);
+            //    MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
+            //    MST.MES.OrderStatus.ChangeOrderStatus(MesDataStorage.kittingData.orderNo, MST.MES.OrderStatus.Status.Finished);
 
-                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(MesDataStorage.kittingData.orderNo), MesDataStorage.boxingData.Count, MesDataStorage.viData.scrapCount);
-                labelStatus.Text = $"Status: zlecenie zakończone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
-                buttonEndOrder.Visible = false;
-            }
+            //    Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(MesDataStorage.kittingData.orderNo), MesDataStorage.boxingData.Count, MesDataStorage.viData.scrapCount);
+            //    labelStatus.Text = $"Status: zlecenie zakończone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
+            //    buttonEndOrder.Visible = false;
+            //}
         }
         private void PartialConfirm()
         {
-            DialogResult partialConfirmDialog = MessageBox.Show($"Na naprawę wiąż oczekuje {CurrentOrder.VisualInspection.WaitingForRepair} NG. Możliwe jest częściowe przesunięcie."
-                        + Environment.NewLine + "Po naprawie konieczne będzie końcowe rozliczenie naprawionych wyrobów"
-                        + Environment.NewLine + $"Potwierdzonych zostanie: {MesDataStorage.boxingData.Count} wyrobu dobrego oraz {MesDataStorage.viData.scrapCount} scrap"
-                        + Environment.NewLine + Environment.NewLine + "Czy chcesz częściowo przesunąć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
+            //DialogResult partialConfirmDialog = MessageBox.Show($"Na naprawę wiąż oczekuje {CurrentOrder.VisualInspection.WaitingForRepair} NG. Możliwe jest częściowe przesunięcie."
+            //            + Environment.NewLine + "Po naprawie konieczne będzie końcowe rozliczenie naprawionych wyrobów"
+            //            + Environment.NewLine + $"Potwierdzonych zostanie: {MesDataStorage.boxingData.Count} wyrobu dobrego oraz {MesDataStorage.viData.scrapCount} scrap"
+            //            + Environment.NewLine + Environment.NewLine + "Czy chcesz częściowo przesunąć zlecenie?", "UWAGA", MessageBoxButtons.YesNo);
 
-            if (partialConfirmDialog == DialogResult.Yes)
-            {
-                MST.MES.SqlOperations.Kitting.FinishOrder(
-                    CurrentOrder.orderNo,
-                    MesDataStorage.boxingData.Count,
-                    CurrentOrder.VisualInspection.WaitingForRepair,
-                    MesDataStorage.viData.scrapCount,
-                    MST.MES.OrderStatus.Status.ShippedNgNotDone);
+            //if (partialConfirmDialog == DialogResult.Yes)
+            //{
+            //    MST.MES.SqlOperations.Kitting.FinishOrder(
+            //        CurrentOrder.orderNo,
+            //        MesDataStorage.boxingData.Count,
+            //        CurrentOrder.VisualInspection.WaitingForRepair,
+            //        MesDataStorage.viData.scrapCount,
+            //        MST.MES.OrderStatus.Status.ShippedNgNotDone);
 
-                MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
+            //    MST.MES.SqlOperations.SMT.UpdateLedUsedAmount(textBoxOrderNo.Text, (int)ledsUsed);
 
-                Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(MesDataStorage.kittingData.orderNo), MesDataStorage.boxingData.Count, MesDataStorage.viData.scrapCount);
-                labelStatus.Text = $"Status: zlecenie częściowo potwierdzone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
-                buttonEndOrder.Visible = true;
-            }
+            //    Graffiti.MST.OrdersOperations.ConfirmOrder(int.Parse(MesDataStorage.kittingData.orderNo), MesDataStorage.boxingData.Count, MesDataStorage.viData.scrapCount);
+            //    labelStatus.Text = $"Status: zlecenie częściowo potwierdzone: {DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss")}";
+            //    buttonEndOrder.Visible = true;
+            //}
         }
         private void SecondConfirm()
         {
@@ -235,7 +253,7 @@ namespace Zużycie_LED_do_zlecenia
 
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (MesDataStorage.kittingData.modelId != null)
+            if (MesDataStorage.kittingData != null)
             {
                 dataGridView1.DataSource = sourceTable;
                 dataGridView1.Columns["butCol"].DisplayIndex = dataGridView1.Columns.Count - 1;
@@ -296,27 +314,37 @@ namespace Zużycie_LED_do_zlecenia
                     labelScrap.Text += $" (w tym {MesDataStorage.viData.reworkFailedCout}szt. - nieudana naprawa)";
                 }
 
-                if ((int)MesDataStorage.kittingData.ordertatus < 4)
+                if (MesDataStorage.kittingData.endDate < MesDataStorage.kittingData.kittingDate) 
                 {
                     labelStatus.Text = $"Status: zlecenie nie jest zakończone!";
                     buttonEndOrder.Visible = true;
                 }
                 else
                 {
-                    if (MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.Finished)
-                    {
-                        labelStatus.Text = $"Status: zlecenie zakończone: {MesDataStorage.kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}"
-                            + Environment.NewLine + $"Przesunięto: {MesDataStorage.kittingData.confirmedGoodQty} wyr. dobrego, {MesDataStorage.kittingData.confirmedScrQty} scrap";
-                        buttonEndOrder.Visible = false;
-                    }
-                    else
-                    {
-                        labelStatus.Text = $"Status: zlecenie częściowo przesunięte: {MesDataStorage.kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}" +
-                            Environment.NewLine + $"Przesunięto: {MesDataStorage.kittingData.confirmedGoodQty} wyr. dobrego, {MesDataStorage.kittingData.confirmedScrQty} scrap" +
-                            Environment.NewLine + $"Oczekujące na naprawę: {MesDataStorage.kittingData.confirmedNgQty} NG";
-                        buttonEndOrder.Visible = true;
-                    }
+                    labelStatus.Text = $"Dnia {MesDataStorage.kittingData.endDate} przesunięte zostało:" + Environment.NewLine;
+                    labelStatus.Text += $"Dobrych: {MesDataStorage.kittingData.confirmedGoodQty}" + Environment.NewLine;
+                    labelStatus.Text += $"NG: {MesDataStorage.kittingData.confirmedNgQty}" + Environment.NewLine;
+                    labelStatus.Text += $"SCRAP: {MesDataStorage.kittingData.confirmedScrQty}" + Environment.NewLine;
+
+                    buttonEndOrder.Visible = true;
                 }
+                
+                //else
+                //{
+                //    if (MesDataStorage.kittingData.ordertatus == MST.MES.OrderStatus.Status.Finished)
+                //    {
+                //        labelStatus.Text = $"Status: zlecenie zakończone: {MesDataStorage.kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}"
+                //            + Environment.NewLine + $"Przesunięto: {MesDataStorage.kittingData.confirmedGoodQty} wyr. dobrego, {MesDataStorage.kittingData.confirmedScrQty} scrap";
+                //        buttonEndOrder.Visible = false;
+                //    }
+                //    else
+                //    {
+                //        labelStatus.Text = $"Status: zlecenie częściowo przesunięte: {MesDataStorage.kittingData.endDate.ToString("dd-MM-yyyy HH:mm:ss")}" +
+                //            Environment.NewLine + $"Przesunięto: {MesDataStorage.kittingData.confirmedGoodQty} wyr. dobrego, {MesDataStorage.kittingData.confirmedScrQty} scrap" +
+                //            Environment.NewLine + $"Oczekujące na naprawę: {MesDataStorage.kittingData.confirmedNgQty} NG";
+                //        buttonEndOrder.Visible = true;
+                //    }
+                //}
             }
         }
 
@@ -416,6 +444,74 @@ namespace Zużycie_LED_do_zlecenia
                     cell.Style.BackColor = Color.Black;
                     cell.Style.ForeColor = Color.White;
                 }
+            }
+        }
+
+        private async void bwLoadOrder_DoWork_1(object sender, DoWorkEventArgs e)
+        {
+            detailedLedInfoDict = new Dictionary<string, IEnumerable<ComponentsTools.ComponentStruct>>();
+            string orderNo = textBoxOrderNo.Text.Trim();
+            CurrentOrder.orderNo = orderNo;
+            MesDataStorage.LoadMesData(orderNo);
+
+            if (MesDataStorage.kittingData.modelId != null)
+            {
+                DataTable result = new DataTable();
+                if (MesDataStorage.kittingData.orderNo != null)
+                {
+                    GraffitiComponents.LoadComponents();
+                    //DataTable sqlLedsForOrder = MST.MES.SqlOperations.SparingLedInfo.GetReelsForLot(orderNo);
+                    var componentsUsedInOrder = GraffitiComponents.allComponents;
+                    //var grouppedBy12Nc = componentsUsedInOrder.GroupBy(c => c.Nc12).Select(group => new { Nc12 = group.Key, Items = group.ToList() });
+                    var grouppedBy12NcAndId = componentsUsedInOrder.GroupBy(c => new { c.Nc1_Rank, c.Id });
+
+                    //bwLoadOrder.ReportProgress(50, 0);
+                    //Dictionary<string, Dictionary<string, DataTable>> detailedLedInfo = LedTools.FullLedInfo(sqlLedsForOrder);
+                    //bwLoadOrder.ReportProgress(80, 0);
+                    result.Columns.Add("12NC");
+                    result.Columns.Add("ID");
+                    result.Columns.Add("Partia");
+                    result.Columns.Add("Ilosc zużyta");
+                    result.Columns.Add("Ilosc aktualna");
+
+                    result.Rows.Add("Płyty PCB");
+
+
+                    var detailedLedInfo = GraffitiComponents.componentsWithHistory;
+
+                    foreach (var comp in grouppedBy12NcAndId)
+                    {
+                        if (!comp.Key.Nc1_Rank.StartsWith("4010560") & !comp.Key.Nc1_Rank.StartsWith("4010460") & !comp.Key.Nc1_Rank.StartsWith("4010441") & !comp.Key.Nc1_Rank.StartsWith("4010440")) continue;
+                        var detailesForReel = detailedLedInfo.Where(x => x.Nc1_Rank == comp.Key.Nc1_Rank & x.Id == comp.Key.Id);
+
+                        int quantityUsed = calculateLedUsedInOrder(detailesForReel, orderNo);
+
+                        if (comp.Key.Nc1_Rank.StartsWith("4010560") || comp.Key.Nc1_Rank.StartsWith("4010460"))
+                        {
+                            ledsUsed += quantityUsed;
+                            var newRow = result.NewRow();
+                            newRow[0] = comp.Key.Nc1_Rank;
+                            newRow[1] = comp.Key.Id;
+                            newRow[2] = comp.First().deliveryDate.ToString("dd-MM-yyyy");
+                            newRow[3] = quantityUsed;
+                            newRow[4] = comp.OrderBy(x => x.operationDate).Last().Quantity;
+
+                            result.Rows.InsertAt(newRow, 0);
+                        }
+                        else
+                        {
+                            mbUsed += quantityUsed;
+                            result.Rows.Add(comp.Key.Nc1_Rank, comp.Key.Id, comp.First().deliveryDate.ToString("dd-MM-yyyy"), quantityUsed, comp.OrderBy(x => x.operationDate).Last().Quantity);
+                        }
+
+                        detailedLedInfoDict.Add(comp.Key.Nc1_Rank + comp.Key.Id, detailesForReel);
+                    }
+
+                    var ledDescrRow = result.NewRow();
+                    ledDescrRow[0] = "Diody LED";
+                    result.Rows.InsertAt(ledDescrRow, 0);
+                }
+                sourceTable = result;
             }
         }
     }

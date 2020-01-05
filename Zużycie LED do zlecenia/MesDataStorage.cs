@@ -15,7 +15,13 @@ namespace Zużycie_LED_do_zlecenia
         //public static ModelSpecification modelSpec;
         public static VisualInspection viData;
         public static List<BoxingInfo> boxingData;
-
+        public static void LoadMesData(string orderNo)
+        {
+            LoadKittingData(orderNo);
+            LoadSmtData(orderNo);
+            LoadViData(orderNo);
+            LoadBoxingData(orderNo);
+        }
 
         public static async Task LoadMesDataAsync(string orderNo)
         {
@@ -24,7 +30,6 @@ namespace Zużycie_LED_do_zlecenia
             taskList.Add(Task.Run(() => LoadSmtData(orderNo)));
             taskList.Add(Task.Run(() => LoadViData(orderNo)));
             taskList.Add(Task.Run(() => LoadBoxingData(orderNo)));
-            taskList.Add(Task.Run(() => GraffitiComponents.LoadComponents()));
             await Task.WhenAll(taskList);
             //LoadModelInfo(kittingData.modelId);
         }

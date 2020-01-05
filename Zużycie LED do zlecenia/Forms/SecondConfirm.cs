@@ -70,13 +70,13 @@ namespace Zużycie_LED_do_zlecenia.Forms
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if(button1.Text == "OK")
-            {
-                Graffiti.MST.OrdersOperations.ConfirmRemainingNg(int.Parse(CurrentOrder.orderNo), (double)numGoodQty.Value, (double)numScrQty.Value);
-                goodQty = (int)numGoodQty.Value;
-                scrQty = (int)numScrQty.Value;
-                this.DialogResult = DialogResult.OK;
-            }
+            //if(button1.Text == "OK")
+            //{
+            //    Graffiti.MST.OrdersOperations.ConfirmRemainingNg(int.Parse(CurrentOrder.orderNo), (double)numGoodQty.Value, (double)numScrQty.Value);
+            //    goodQty = (int)numGoodQty.Value;
+            //    scrQty = (int)numScrQty.Value;
+            //    this.DialogResult = DialogResult.OK;
+            //}
         }
     }
 }
